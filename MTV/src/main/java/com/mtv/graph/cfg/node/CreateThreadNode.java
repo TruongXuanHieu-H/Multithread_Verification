@@ -29,7 +29,7 @@ public class CreateThreadNode extends CFGNode {
         DebugHelper.print("\tThread reference: " + threadReference);
         DebugHelper.print("\tAttributes expression: " + attributesExpression);
         DebugHelper.print("\tFunction reference: " + funcReference);
-        funcCFG.printGraph(8);
+        //funcCFG.printGraph(8);
         DebugHelper.print("\tRestriction expression: " + restrictionExpression);
 
     }

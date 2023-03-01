@@ -3,12 +3,14 @@ package com.mtv.app;
 import com.mtv.DebugHelper.DebugHelper;
 import com.mtv.graph.ast.ASTFactory;
 import com.mtv.graph.cfg.build.ControlFlowGraph;
+import com.mtv.graph.cfg.node.CFGNode;
 import com.mtv.graph.eog.EventOrderAction;
 import com.mtv.graph.eog.EventOrderGraph;
 import com.mtv.graph.eog.EventOrderGraphBuilder;
 import com.mtv.graph.eog.EventOrderNode;
 import org.eclipse.cdt.core.dom.ast.IASTFunctionDefinition;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.util.Random;
 import java.util.random.RandomGenerator;
@@ -26,7 +28,11 @@ public class Main {
         ControlFlowGraph cfg = new ControlFlowGraph(func, ast, true);
         cfg.unfold();
         cfg.printGraph();
-
+        CFGNode start = cfg.getStart();
+        while (start != null) {
+            DebugHelper.print(start.getClass().toString());
+            start = start.getNext();
+        }
         EventOrderGraphBuilder.Build(cfg);
 
 

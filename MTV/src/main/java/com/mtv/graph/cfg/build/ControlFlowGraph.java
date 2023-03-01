@@ -46,12 +46,13 @@ public class ControlFlowGraph {
     }
 
     private static void print(CFGNode start, int level) {
-        if (start != null) printSpace(level);
+        if (start != null) {
+            printSpace(level);
+        }
         if (start == null) {
             return;
         } else if (start instanceof DecisionNode) {
-            ((DecisionNode)start).printNode();
-            //System.out.println(iter.getFormula());
+            start.printNode();
             printSpace(level + 4);
             DebugHelper.print("Then Clause: ");
             if (((DecisionNode) start).getThenNode() != null) {
@@ -63,13 +64,13 @@ public class ControlFlowGraph {
         } else if (start instanceof GotoNode) {
             start.printNode();
             printSpace(level);
-            ((GotoNode) start).getNext().printNode();
+            start.getNext().printNode();
         } else if (start instanceof IterationNode) {
-            ((IterationNode)start).printNode();
+            start.printNode();
             if (start.getNext() != null) print(start.getNext(), level);
             else return;
         } else if (start instanceof EmptyNode) {
-            ((EmptyNode)start).printNode();
+            start.printNode();
             print(start.getNext(), level);
         } else if (start instanceof EndConditionNode) {
             level -= 7;
@@ -79,13 +80,16 @@ public class ControlFlowGraph {
             ((BeginNode) start).getEndNode().printNode();
             print(((BeginNode) start).getEndNode().getNext(), level);
         } else if (start instanceof EndNode) {
-            ((EndNode)start).printNode();
+            start.printNode();
             print(start.getNext(), level);
         } else if (start instanceof CreateThreadNode){
-            ((CreateThreadNode)start).printNode();
+            start.printNode();
             print(start.getNext(), level);
         } else if (start instanceof JoinThreadNode) {
-            ((JoinThreadNode)start).printNode();
+            start.printNode();
+            print(start.getNext(), level);
+        } else if (start instanceof BeginFunctionNode) {
+            start.printNode();
             print(start.getNext(), level);
         } else {
             start.printNode();
@@ -105,6 +109,7 @@ public class ControlFlowGraph {
         } else {
             exit.setNext(other.start);
             exit = other.exit;
+
         }
     }
 
@@ -222,7 +227,6 @@ public class ControlFlowGraph {
         CFGNode iter = start;
         if (iter != null) printSpace(level);
         if (iter == null) {
-            //System.out.println(iter);
             return;
         } else if (iter instanceof DecisionNode) {
             //System.out.println(iter.getFormula());
@@ -245,7 +249,6 @@ public class ControlFlowGraph {
             printFunc(((BeginNode) iter).getEndNode().getNext(), level);
         } else if (iter instanceof BeginFunctionNode) {
             iter.printNode();
-            //level += 1;
             printFunc(iter.getNext(), level);
         } else if (iter instanceof EndFunctionNode) {
             iter.printNode();
@@ -255,7 +258,7 @@ public class ControlFlowGraph {
         }
     }
 
-    public void printDebug() {
+    /*public void printDebug() {
         printDebug(start);
     }
 
@@ -279,6 +282,6 @@ public class ControlFlowGraph {
             }
         }
 
-    }
+    }*/
 
 }

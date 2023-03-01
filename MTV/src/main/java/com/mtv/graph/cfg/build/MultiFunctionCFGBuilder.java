@@ -57,9 +57,9 @@ public class MultiFunctionCFGBuilder {
         prvCfg.concat(new ControlFlowGraph(beginFunc, beginFunc));
         ControlFlowGraph mainFuncCfg = new ControlFlowGraph(func);
         prvCfg.concat(mainFuncCfg);
-        CFGNode newStart = iterateNode(prvCfg.getStart(), prvCfg.getExit(), func);
         EndFunctionNode endFunction = new EndFunctionNode(func);
         prvCfg.concat(new ControlFlowGraph(endFunction, endFunction));
+        iterateNode(prvCfg.getStart(), func);
 
         return prvCfg;
     }
@@ -79,32 +79,32 @@ public class MultiFunctionCFGBuilder {
      * @param node, end, func
      *              Ham duyet java.cfg va xu ly FunctionCallNode
      */
-    private CFGNode iterateNode(CFGNode node, CFGNode end, IASTFunctionDefinition func) {
+    private CFGNode iterateNode(CFGNode node, IASTFunctionDefinition func) {
         if (node == null) {
-            node = null;
+
         } else if (node instanceof DecisionNode) {
-            ((DecisionNode) node).setThenNode(iterateNode(((DecisionNode) node).getThenNode(), end, func));
-            ((DecisionNode) node).setElseNode(iterateNode(((DecisionNode) node).getElseNode(), end, func));
-        } else if (node instanceof EndConditionNode) {
-
+            ((DecisionNode) node).setThenNode(iterateNode(((DecisionNode) node).getThenNode(), func));
+            ((DecisionNode) node).setElseNode(iterateNode(((DecisionNode) node).getElseNode(), func));
         } else if (node instanceof BeginNode) {
-            node.setNext(iterateNode(node.getNext(), end, func));
-            ((BeginNode) node).getEndNode().setNext(iterateNode(((BeginNode) node).getEndNode().getNext(), end, func));
+            node.setNext(iterateNode(node.getNext(), func));
+            ((BeginNode) node).getEndNode().setNext(iterateNode(((BeginNode) node).getEndNode().getNext(), func));
         } else if (node instanceof FunctionCallNode) {
-            String str = ((FunctionCallNode) node).getFunctionCall().getFunctionNameExpression().getRawSignature();
             ControlFlowGraph functionGraph = createFuncGraph(((FunctionCallNode) node).getFunctionCall(), func);
-
             if (functionGraph != null) {
                 CFGNode pause = node.getNext();
-                node = iterateNode(functionGraph.getStart(), end, func);
-                functionGraph.getExit().setNext(iterateNode(pause, end, func));
+                node = iterateNode(functionGraph.getStart(), func);
+                functionGraph.getExit().setNext(iterateNode(pause, func));
             }
-        } else if (node instanceof EndNode || node instanceof EndFunctionNode ) {
+        } else if (node instanceof EndNode) {
 
         } else if (node instanceof AbortNode) {
 
+        } else if (node instanceof EndFunctionNode) {
+
+        } else if (node instanceof EndConditionNode) {
+
         } else {
-            node.setNext(iterateNode(node.getNext(), end, func));
+            node.setNext(iterateNode(node.getNext(), func));
         }
         return node;
     }
