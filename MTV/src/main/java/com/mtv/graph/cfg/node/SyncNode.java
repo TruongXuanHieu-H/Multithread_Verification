@@ -48,6 +48,7 @@ public class SyncNode extends CFGNode {
 
     }
 
+    @Override
     public void printNode() {
         System.out.println("SyncNode: " + this.leftHand + " = " + this.rightHand);
     }

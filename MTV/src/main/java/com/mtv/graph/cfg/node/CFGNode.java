@@ -1,5 +1,6 @@
 package com.mtv.graph.cfg.node;
 
+import com.mtv.DebugHelper.DebugHelper;
 import com.mtv.graph.cfg.index.VariableManager;
 
 import java.io.PrintStream;
@@ -10,9 +11,11 @@ public abstract class CFGNode {
     private boolean vistited;
 
     public CFGNode() {
+
     }
 
     public CFGNode(CFGNode next) {
+
         this.vistited = false;
         this.next = next;
     }
@@ -31,9 +34,7 @@ public abstract class CFGNode {
         return adj;
     }
 
-    public void printNode() {
-        if (this != null) System.out.println(this.getClass());
-    }
+    public abstract void printNode();
 
     public String toString() {
         return "";

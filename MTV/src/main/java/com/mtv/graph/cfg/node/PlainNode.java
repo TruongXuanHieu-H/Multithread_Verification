@@ -1,5 +1,6 @@
 package com.mtv.graph.cfg.node;
 
+import com.mtv.DebugHelper.DebugHelper;
 import com.mtv.graph.cfg.utils.ExpressionHelper;
 import com.mtv.graph.cfg.utils.Index;
 import com.mtv.graph.cfg.index.FormulaCreater;
@@ -16,15 +17,18 @@ public class PlainNode extends CFGNode {
 
     public PlainNode() {
         super();
+        DebugHelper.print("Plain node created: " + statement.getRawSignature());
     }
 
     public PlainNode(IASTStatement statement) {
         this.statement = statement;
+        DebugHelper.print("Plain node created: " + statement.getRawSignature());
     }
 
     public PlainNode(IASTStatement statement, IASTFunctionDefinition func) {
         this.statement = changeName(statement, func);
         this.setFunc(func);
+        DebugHelper.print("Plain node created: " + statement.getRawSignature());
     }
 
     private IASTStatement changeName(IASTStatement statement, IASTFunctionDefinition func) {
@@ -55,11 +59,10 @@ public class PlainNode extends CFGNode {
         return ExpressionHelper.toString(statement);
     }
 
+    @Override
     public void printNode() {
         if (statement != null) {
-            String expresstion_type = statement.getClass().getSimpleName();
-            System.out.print("PlainNode: ");
-            System.out.println(ExpressionHelper.toString(statement));
+            DebugHelper.print("PlainNode: " + ExpressionHelper.toString(statement));
         } else System.out.println(this);
 
     }

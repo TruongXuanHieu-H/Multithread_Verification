@@ -242,10 +242,6 @@ public class UnfoldCFG {
 		return node;
 }
 
-
-	public void printGraph() {
-		ControlFlowGraph.printGraph(start);
-	}
 	
 	public ControlFlowGraph getGraph() {
 		return new ControlFlowGraph(start, exit);

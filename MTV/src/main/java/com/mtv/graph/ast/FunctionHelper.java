@@ -1,6 +1,6 @@
 package com.mtv.graph.ast;
 
-import com.mtv.graph.variable.VariableManager;
+import com.mtv.graph.cfg.index.VariableManager;
 import org.eclipse.cdt.core.dom.ast.*;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPNodeFactory;
 

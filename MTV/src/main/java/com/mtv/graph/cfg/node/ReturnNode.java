@@ -27,6 +27,10 @@ public class ReturnNode extends PlainNode {
         return binaryStatement;
     }
 
+    @Override
+    public void printNode() {
+        System.out.println("Return node");
+    }
 
 //	private static IASTStatement changeSyntax(IASTReturnStatement statement, IASTFunctionDefinition def) {
 //	CPPNodeFactory factory = (CPPNodeFactory) statement.getTranslationUnit().getASTNodeFactory();

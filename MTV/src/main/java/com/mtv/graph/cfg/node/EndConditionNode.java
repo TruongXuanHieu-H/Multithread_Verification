@@ -15,6 +15,7 @@ public class EndConditionNode extends EndNode {
         super(node);
     }
 
+    @Override
     public void printNode() {
         System.out.println("EndConditionNode");
     }

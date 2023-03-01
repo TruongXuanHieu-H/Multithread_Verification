@@ -1,5 +1,6 @@
 package com.mtv.graph.cfg.node;
 
+import com.mtv.DebugHelper.DebugHelper;
 import com.mtv.graph.ast.FunctionHelper;
 import org.eclipse.cdt.core.dom.ast.IASTFunctionDefinition;
 
@@ -8,6 +9,7 @@ public class BeginFunctionNode extends CFGNode {
 
     public BeginFunctionNode(IASTFunctionDefinition function) {
         funcDefinition = function;
+        DebugHelper.print("Function " + function.getDeclarator().getName() + " is created");
     }
     public void setFunction(IASTFunctionDefinition function) {
         funcDefinition = function;

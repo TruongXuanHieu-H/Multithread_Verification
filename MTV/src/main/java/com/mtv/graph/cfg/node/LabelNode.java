@@ -28,6 +28,7 @@ public class LabelNode extends CFGNode {
         return function;
     }
 
+    @Override
     public void printNode() {
         if (statement != null)
             System.out.println("LabelNode: " + statement.getName() + "_" + FunctionHelper.getShortenName(function));

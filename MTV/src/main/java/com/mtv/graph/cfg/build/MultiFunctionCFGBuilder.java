@@ -1,11 +1,13 @@
 package com.mtv.graph.cfg.build;
 
+import com.mtv.DebugHelper.DebugHelper;
 import com.mtv.graph.ast.ASTFactory;
 import com.mtv.graph.ast.FunctionHelper;
 import com.mtv.graph.ast.IASTVariable;
 import com.mtv.graph.cfg.node.*;
 import com.mtv.graph.cfg.utils.ExpressionModifier;
 import org.eclipse.cdt.core.dom.ast.*;
+import org.eclipse.cdt.core.parser.IToken;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPNodeFactory;
 
 import java.util.ArrayList;
@@ -23,29 +25,39 @@ public class MultiFunctionCFGBuilder {
 
     }
 
-    //Them cac cau lenh khoi tao toan cuc
-    public ControlFlowGraph build(IASTFunctionDefinition func) {
+
+    public ControlFlowGraph build(IASTFunctionDefinition func, boolean includeGlobalVars) {
         if (func == null) {
+            DebugHelper.print("Function is null. Terminated.");
             return null;
         }
+        // Create empty control flow graph
+
         ControlFlowGraph prvCfg = new ControlFlowGraph();
+        // Create CPP node factory, where is used to build node for control flow graph
         CPPNodeFactory factory = new CPPNodeFactory();
+
         ASTFactory ast = new ASTFactory(func.getTranslationUnit());
-        ArrayList<IASTDeclaration> declarations = ast.getGlobalVarList();
-        ControlFlowGraph subCfg;
-        for (IASTDeclaration declaration : declarations) {
-            IASTDeclarationStatement statement = factory.newDeclarationStatement(declaration.copy());
-            subCfg = (new ControlFlowGraphBuilder()).createSubGraph(statement);
-            if (prvCfg == null) {
-                prvCfg = subCfg;
-            } else {
-                prvCfg.concat(subCfg);
+
+
+        if (includeGlobalVars) {
+            ArrayList<IASTDeclaration> declarations = ast.getGlobalVarList();
+            ControlFlowGraph subCfg;
+            for (IASTDeclaration declaration : declarations) {
+                IASTDeclarationStatement statement = factory.newDeclarationStatement(declaration.copy());
+                subCfg = (new ControlFlowGraphBuilder()).createSubGraph(statement);
+                if (prvCfg == null) {
+                    prvCfg = subCfg;
+                } else {
+                    prvCfg.concat(subCfg);
+                }
             }
         }
-        ControlFlowGraph mainFuncCfg = getVtseCFG(func);
+        BeginFunctionNode beginFunc = new BeginFunctionNode(func);
+        prvCfg.concat(new ControlFlowGraph(beginFunc, beginFunc));
+        ControlFlowGraph mainFuncCfg = new ControlFlowGraph(func);
         prvCfg.concat(mainFuncCfg);
-
-        CFGNode newStart = iterateNode(prvCfg.getStart(), prvCfg.exit, func);
+        CFGNode newStart = iterateNode(prvCfg.getStart(), prvCfg.getExit(), func);
         EndFunctionNode endFunction = new EndFunctionNode(func);
         prvCfg.concat(new ControlFlowGraph(endFunction, endFunction));
 
@@ -61,16 +73,6 @@ public class MultiFunctionCFGBuilder {
             list.add(cfg);
         }
         return list;
-    }
-
-    //find control flow graph of function
-    private ControlFlowGraph getVtseCFG(IASTFunctionDefinition func) {
-        for (ControlFlowGraph cfg : createList()) {
-            if (cfg.getNameFunction().equals(func.getDeclarator().getName().toString())) {
-                return cfg;
-            }
-        }
-        return null;
     }
 
     /**
@@ -89,15 +91,17 @@ public class MultiFunctionCFGBuilder {
             node.setNext(iterateNode(node.getNext(), end, func));
             ((BeginNode) node).getEndNode().setNext(iterateNode(((BeginNode) node).getEndNode().getNext(), end, func));
         } else if (node instanceof FunctionCallNode) {
+            String str = ((FunctionCallNode) node).getFunctionCall().getFunctionNameExpression().getRawSignature();
             ControlFlowGraph functionGraph = createFuncGraph(((FunctionCallNode) node).getFunctionCall(), func);
 
             if (functionGraph != null) {
                 CFGNode pause = node.getNext();
-                //todo
                 node = iterateNode(functionGraph.getStart(), end, func);
                 functionGraph.getExit().setNext(iterateNode(pause, end, func));
             }
         } else if (node instanceof EndNode || node instanceof EndFunctionNode ) {
+
+        } else if (node instanceof AbortNode) {
 
         } else {
             node.setNext(iterateNode(node.getNext(), end, func));
@@ -112,50 +116,107 @@ public class MultiFunctionCFGBuilder {
         return type.equals("void") ? true : false;
     }
 
-    //create CFG of 1 function (intra-control flow graph)
+    /* Create CFG for function call expression
+     * Argument list:
+     *  - callExpression: expression of the call, which contains information about the call such as called function's name or arguments
+     *  - currentFunc: the function which callExpression is stay inside
+     */
     private ControlFlowGraph createFuncGraph(IASTFunctionCallExpression callExpression, IASTFunctionDefinition currentFunc) {
         ControlFlowGraph cfg = new ControlFlowGraph();
-        String funcName = callExpression.getFunctionNameExpression().toString();
-        IASTFunctionDefinition func = FunctionHelper.getFunction(ast.getListFunction(), funcName);
+        // The function which is called by this expression
+        String targetedFuncName = callExpression.getFunctionNameExpression().toString();
+        String info = callExpression.getRawSignature();
 
-        if (func == null) {
-            System.err.println("Not found function " + funcName);
-            System.exit(1);
+        /*
+         * Custom CFG for pthread_create function
+         *
+         */
+        if (targetedFuncName.equals("pthread_create")) {
+            /*
+             * pthread_create takes 4 arguments
+             */
+            IASTInitializerClause[] arguments = callExpression.getArguments();
+            String threadReference = arguments[0].getRawSignature().substring(1) + "_" + currentFunc.getDeclarator().getName();
+            String attributeExpression = arguments[1].getRawSignature();
+            String funcReference = arguments[2].getRawSignature();
+            String restrictionExpression = arguments[3].getRawSignature();
+
+            /*
+             * Control flow graph of the function which pthread_t is pointed to
+             */
+            ControlFlowGraph funcCFG = new ControlFlowGraph(ast.getFunction(funcReference), ast, false);
+            CreateThreadNode createThreadNode = new CreateThreadNode(threadReference, attributeExpression, funcReference, funcCFG, restrictionExpression);
+
+
+            return new ControlFlowGraph(createThreadNode, createThreadNode);
+        }
+        /*
+         * Custom CFG for pthread_join function
+         *
+         */
+        else if (targetedFuncName.equals("pthread_join")) {
+            /*
+             * pthread_join takes 2 arguments
+             */
+            IASTInitializerClause[] arguments = callExpression.getArguments();
+            String threadReference = arguments[0].getRawSignature() + "_" + currentFunc.getDeclarator().getName();
+            String retvalExpression = arguments[1].getRawSignature();
+
+            JoinThreadNode joinThreadNode = new JoinThreadNode(threadReference, retvalExpression);
+
+            return new ControlFlowGraph(joinThreadNode, joinThreadNode);
+        } else if (targetedFuncName.equals("abort")) {
+            AbortNode abortNode = new AbortNode();
+            return new ControlFlowGraph(abortNode, abortNode);
+        }
+        /*
+         * Default CFG for other functions
+         *
+         */
+        else {
+            IASTFunctionDefinition func = FunctionHelper.getFunction(ast.getListFunction(), targetedFuncName);
+
+            if (func == null) {
+                System.err.println("Not found function " + targetedFuncName);
+                System.exit(1);
+            }
+
+            //add begin function node at the beginning
+            BeginFunctionNode beginNode = new BeginFunctionNode(func);
+            cfg.concat(new ControlFlowGraph(beginNode, beginNode));
+
+            CPPNodeFactory factory = (CPPNodeFactory) func.getTranslationUnit().getASTNodeFactory();
+            //Cho tham so = params
+            ControlFlowGraph argGraph = createArguments(callExpression, currentFunc);
+            if (argGraph != null) cfg.concat(argGraph);
+
+            //Noi voi than cua ham duoc goi
+            ControlFlowGraph funcGraph = new ControlFlowGraph(func);
+            //funcGraph.ungoto();
+            //funcGraph.unfold(1);
+            //TODO Try to unfold funcGraph
+            cfg.concat(funcGraph);
+
+            //Tao ra node: ham duoc goi = return neu khong phai void
+            if (!isVoid(callExpression)) {
+                IASTIdExpression left = (IASTIdExpression) ExpressionModifier.changeFunctionCallExpression(callExpression, func);
+                IASTName nameRight = factory.newName(("return_" + FunctionHelper.getShortenName(targetedFuncName)).toCharArray());
+                IASTIdExpression right = factory.newIdExpression(nameRight);
+                IASTBinaryExpression binaryExp = factory.newBinaryExpression(IASTBinaryExpression.op_assign, left, right);
+                IASTExpressionStatement statement = factory.newExpressionStatement(binaryExp);
+
+                CFGNode plainNode = new PlainNode(statement); //tao ra plainNode khong co ten ham dang sau
+                cfg.concat(new ControlFlowGraph(plainNode, plainNode));
+            }
+
+            EndFunctionNode endFunction = new EndFunctionNode(func);
+            cfg.concat(new ControlFlowGraph(endFunction, endFunction));
+
+            return cfg;
+
+
         }
 
-        //add begin function node at the beginning
-        BeginFunctionNode beginNode = new BeginFunctionNode(func);
-        cfg.concat(new ControlFlowGraph(beginNode, beginNode));
-
-        CPPNodeFactory factory = (CPPNodeFactory) func.getTranslationUnit().getASTNodeFactory();
-        //Cho tham so = params
-        ControlFlowGraph argGraph = createArguments(callExpression, currentFunc);
-        if (argGraph != null) cfg.concat(argGraph);
-
-        //Noi voi than cua ham duoc goi
-        ControlFlowGraph funcGraph = new ControlFlowGraph(func);
-        //funcGraph.ungoto();
-        //funcGraph.unfold(1);
-        //TODO Try to unfold funcGraph
-        cfg.concat(funcGraph);
-
-        //Tao ra node: ham duoc goi = return neu khong phai void
-        if (!isVoid(callExpression)) {
-            IASTIdExpression left = (IASTIdExpression) ExpressionModifier.changeFunctionCallExpression(callExpression, func);
-            IASTName nameRight = factory.newName(("return_" + FunctionHelper.getShortenName(funcName)).toCharArray());
-            IASTIdExpression right = factory.newIdExpression(nameRight);
-            IASTBinaryExpression binaryExp = factory.newBinaryExpression(IASTBinaryExpression.op_assign, left, right);
-            IASTExpressionStatement statement = factory.newExpressionStatement(binaryExp);
-
-            CFGNode plainNode = new PlainNode(statement); //tao ra plainNode khong co ten ham dang sau
-            cfg.concat(new ControlFlowGraph(plainNode, plainNode));
-        }
-
-        EndFunctionNode endFunction = new EndFunctionNode(func);
-        cfg.concat(new ControlFlowGraph(endFunction, endFunction));
-        //System.out.println("concated function");
-
-        return cfg;
     }
 
     /**

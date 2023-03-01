@@ -35,14 +35,10 @@ public class ExpressionHelper {
     }
 
     private static String toStringFunctionCallExpression(IASTFunctionCallExpression node) {
-        String expression = node.getFunctionNameExpression().toString() + "_";
+        String expression = node.getFunctionNameExpression().toString();
         IASTNode[] params = node.getChildren();
         //params[0] la ten function
-
         for (int i = 1; i < params.length; i++) {
-            if (i > 0) {
-                expression += "_";
-            }
             expression += toString(params[i]);
         }
         return expression;

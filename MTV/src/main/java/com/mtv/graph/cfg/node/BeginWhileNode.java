@@ -34,6 +34,7 @@ public class BeginWhileNode extends BeginNode {
         divert = invariantNode;
     }
 
+    @Override
     public void printNode() {
         System.out.println("BeginWhileNode");
     }

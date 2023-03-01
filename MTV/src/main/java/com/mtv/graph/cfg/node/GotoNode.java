@@ -28,6 +28,7 @@ public class GotoNode extends CFGNode {
         return name;
     }
 
+    @Override
     public void printNode() {
         System.out.println("GotoNode: " + gotoStatement.getName());
     }

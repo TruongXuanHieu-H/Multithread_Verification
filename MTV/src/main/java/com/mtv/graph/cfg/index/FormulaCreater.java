@@ -1,5 +1,6 @@
 package com.mtv.graph.cfg.index;
 
+import com.mtv.DebugHelper.DebugHelper;
 import com.mtv.graph.ast.ASTFactory;
 import com.mtv.graph.cfg.utils.ExpressionHelper;
 import com.mtv.graph.cfg.build.ControlFlowGraph;
@@ -317,32 +318,6 @@ public class FormulaCreater {
         return "(" + operand + " " + left + " " + right + ")";
     }
 
-    public static void main(String[] args) throws IOException {
-        ASTFactory ast = new ASTFactory("C:\\Users\\PC\\Desktop\\test.c");
-        System.out.println("Global variables list:");
-        ArrayList<String> vals = ast.getGlobalVarStrList();
-        for(String val : vals) {
-            System.out.println("\t" + val);
-        }
-        System.out.println("Functions list:");
-        ArrayList<IASTFunctionDefinition> fdefs = ast.getListFunction();
-        for (IASTFunctionDefinition fdef : fdefs) {
-            System.out.println("\t" + fdef.getDeclarator().getName().toString());
-        }
-        System.out.println("Control Flow Graph:");
-        for (int i = 0; i < fdefs.size(); i++) {
-            IASTFunctionDefinition func = ast.getFunction(i);
-            System.out.println("\t" + i + ": " + func.getDeclarator().getName().toString());
-            ControlFlowGraph cfg = new ControlFlowGraph(func);
-            cfg.unfold();
-            cfg.printGraph();
-        }
 
 
-    }
-
-    public static String createFuncCallFormula(IASTFunctionCallExpression funcCall, ASTFactory ast) {
-
-        return null;
-    }
 }

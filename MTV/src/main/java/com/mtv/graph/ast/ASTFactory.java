@@ -1,5 +1,6 @@
 package com.mtv.graph.ast;
 
+import com.mtv.DebugHelper.DebugHelper;
 import org.eclipse.cdt.core.dom.ast.*;
 import org.eclipse.cdt.core.dom.ast.gnu.cpp.GPPLanguage;
 import org.eclipse.cdt.core.parser.*;
@@ -52,7 +53,7 @@ public class ASTFactory {
             System.out.print(" ");
         }
 
-        System.out.println("-" + node.getClass().getSimpleName() + " -> " + node.getRawSignature());
+        DebugHelper.print("-" + node.getClass().getSimpleName() + " -> " + node.getRawSignature());
         for (IASTNode iastNode : children)
             printTree(iastNode, index + 2);
     }
@@ -114,7 +115,11 @@ public class ASTFactory {
                     if (decl instanceof IASTStandardFunctionDeclarator) {
                         isVar = false;
                     }
-                    if (isVar) varList.add(run);
+                    if (isVar)  {
+                        if (!varList.contains(run)) {
+                            varList.add(run);
+                        }
+                    }
                 }
             }
         }
@@ -156,9 +161,9 @@ public class ASTFactory {
             }
         }
         //Bao loi neu khong tim duoc function
-        System.out.println("- Function list: ");
+        DebugHelper.print("- Function list: ");
         for (String str : funcNameList) {
-            System.out.println("   ." + str);
+            DebugHelper.print("   ." + str);
         }
 
         System.err.println("Cannot find function: " + name);

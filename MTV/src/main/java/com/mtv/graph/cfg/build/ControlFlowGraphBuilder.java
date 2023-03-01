@@ -1,5 +1,6 @@
 package com.mtv.graph.cfg.build;
 
+import com.mtv.DebugHelper.DebugHelper;
 import com.mtv.graph.ast.ASTNodeFactory;
 import com.mtv.graph.cfg.utils.ExpressionHelper;
 import com.mtv.graph.ast.FunctionHelper;
@@ -68,7 +69,10 @@ public class ControlFlowGraphBuilder {
             ReturnNode returnNode = new ReturnNode(statement);
             cfg = new ControlFlowGraph(returnNode, returnNode);
         } else if (statement instanceof IASTDeclarationStatement) {
-            cfg = createDeclaration((IASTDeclarationStatement) statement);
+            cfg = createVariableDeclaration((IASTDeclarationStatement) statement);
+        } else if (statement instanceof IASTExpressionStatement) {
+            VarAssignedNode varAssignedNode = new VarAssignedNode(statement);
+            cfg = new ControlFlowGraph(varAssignedNode, varAssignedNode);
         } else {
             PlainNode plainNode = new PlainNode(statement);
             cfg = new ControlFlowGraph(plainNode, plainNode);
@@ -113,7 +117,7 @@ public class ControlFlowGraphBuilder {
                 cfg = new ControlFlowGraph(emptyNode, emptyNode);
             }
         } else if (statement instanceof IASTDeclarationStatement) {
-            cfg = createDeclaration((IASTDeclarationStatement) statement, def);
+            cfg = createVariableDeclaration((IASTDeclarationStatement) statement, def);
         } else if (statement instanceof IASTExpressionStatement) {
             cfg = createExpressionStatement((IASTExpressionStatement) statement, def);
         } else if (statement instanceof IASTGotoStatement) {
@@ -181,24 +185,7 @@ public class ControlFlowGraphBuilder {
 
     }
 
-    /**
-     * Kiem tra co loi goi ham trong cau lenh? Loi goi ham la void hay co gia tri tra ve
-     *
-     * @param statement
-     * @return
-     */
-//	private boolean isVoidCall(IASTNode statement) {
-//		boolean result = false;
-//		IASTNode[] nodes = statement.getChildren();
-//		for (IASTNode node : nodes) {
-//			if (node instanceof IASTFunctionCallExpression) {
-//				
-//			} else {
-//				result = isVoidCall(node);
-//			}
-//		}
-//	return result;
-//	}
+
     private boolean hasCallExpression(IASTNode statement) {
         boolean result = false;
         IASTNode[] nodes = statement.getChildren();
@@ -220,14 +207,14 @@ public class ControlFlowGraphBuilder {
      * @param: expressionStatement, functionDef
      */
     private ControlFlowGraph createExpressionStatement(IASTExpressionStatement statement, IASTFunctionDefinition def) {
-        CFGNode plainNode;
+        CFGNode cfgNode;
 
         ControlFlowGraph cfg = null;
         //IASTNode[] nodes = statement.getChildren();
 
         if (!hasCallExpression(statement)) {
-            plainNode = new PlainNode(statement, def);
-            cfg = new ControlFlowGraph(plainNode, plainNode);
+            cfgNode = new VarAssignedNode(statement, def);
+            cfg = new ControlFlowGraph(cfgNode, cfgNode);
         } else {
             //Tao ra node moi co chua loi goi ham la 1 bien
             cfg = createFuncCallGraph(statement, def);
@@ -235,8 +222,8 @@ public class ControlFlowGraphBuilder {
             if (statement.getExpression().getChildren().length == 1) {
                 //Kiem tra loi goi ham co la void khong, neu la void khong lam gi ca
             } else {
-                plainNode = new PlainNode(statement, def);
-                cfg.concat(new ControlFlowGraph(plainNode, plainNode));
+                /*cfgNode = new PlainNode(statement, def);
+                cfg.concat(new ControlFlowGraph(cfgNode, cfgNode));*/
             }
             //EndFunctionNode endFunctionNode = new EndFunctionNode();
             //java.cfg.concat(new ControlFlowGraph(endFunctionNode, endFunctionNode));
@@ -297,7 +284,7 @@ public class ControlFlowGraphBuilder {
      * Vd: int sum = 0, a = b + c;
      * => int sum; sum = 0; int a; a = b + c;
      */
-    private ControlFlowGraph createDeclaration(IASTDeclarationStatement statement, IASTFunctionDefinition func) {
+    private ControlFlowGraph createVariableDeclaration(IASTDeclarationStatement statement, IASTFunctionDefinition func) {
         ControlFlowGraph cfg = new ControlFlowGraph();
         //ControlFlowGraph declCfg = new ControlFlowGraph();
         IASTEqualsInitializer init;
@@ -329,7 +316,7 @@ public class ControlFlowGraphBuilder {
 			newDeclStatement = factory.newDeclarationStatement(newDeclaration);
 			*/
             newDeclStatement = ASTNodeFactory.createDeclarationStatement(nameVar, type);
-            node = new PlainNode(newDeclStatement, func);
+            node = new VarDeclNode(newDeclStatement, func);
             cfg.concat(new ControlFlowGraph(node, node));
             //Neu nhu co dang: int b = 0; int b = f(x) + f(y);
             if (init != null) {
@@ -357,8 +344,7 @@ public class ControlFlowGraphBuilder {
         return cfg;
     }
 
-    @SuppressWarnings("unused")
-    private ControlFlowGraph createDeclaration(IASTDeclarationStatement statement) {
+    private ControlFlowGraph createVariableDeclaration(IASTDeclarationStatement statement) {
         ControlFlowGraph cfg = new ControlFlowGraph();
         ControlFlowGraph declCfg = new ControlFlowGraph();
         IASTEqualsInitializer init;
@@ -390,7 +376,7 @@ public class ControlFlowGraphBuilder {
 			newDeclStatement = factory.newDeclarationStatement(newDeclaration);
 			*/
             newDeclStatement = ASTNodeFactory.createDeclarationStatement(nameVar, type);
-            node = new PlainNode(newDeclStatement);
+            node = new VarDeclNode(newDeclStatement);
             cfg.concat(new ControlFlowGraph(node, node));
             //Neu nhu co dang: int b = 0; int b = f(x) + f(y);
             if (init != null) {

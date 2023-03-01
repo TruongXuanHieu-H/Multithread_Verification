@@ -10,4 +10,9 @@ public class EndNode extends CFGNode {
         super(node);
     }
 
+    @Override
+    public void printNode() {
+        System.out.println("End node");
+    }
+
 }

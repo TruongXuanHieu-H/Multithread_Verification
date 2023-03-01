@@ -1,5 +1,6 @@
 package com.mtv.graph.cfg.build;
 
+import com.mtv.DebugHelper.DebugHelper;
 import com.mtv.graph.ast.ASTFactory;
 import com.mtv.graph.cfg.node.*;
 import org.eclipse.cdt.core.dom.ast.IASTFunctionDefinition;
@@ -27,19 +28,15 @@ public class ControlFlowGraph {
         this.exit = exit;
     }
 
-    public ControlFlowGraph(IASTFunctionDefinition def, ASTFactory ast) {
-        ControlFlowGraph cfg = build(def, ast);
+    public ControlFlowGraph(IASTFunctionDefinition def, ASTFactory ast, boolean includeGlobalVars) {
+        ControlFlowGraph cfg = build(def, ast, includeGlobalVars);
         if (cfg == null) {
-            System.out.println("CFG is empty");
+            DebugHelper.print("CFG is empty");
             System.exit(1);
         }
         start = cfg.getStart();
         exit = cfg.getExit();
         func = def;
-    }
-
-    public static void printGraph(CFGNode start) {
-        print(start, 0);
     }
 
     private static void printSpace(int level) {
@@ -49,48 +46,50 @@ public class ControlFlowGraph {
     }
 
     private static void print(CFGNode start, int level) {
-        CFGNode iter = start;
-        printSpace(level);
-        if (iter == null) {
-            //System.out.println(iter);
+        if (start != null) printSpace(level);
+        if (start == null) {
             return;
-        } else if (iter instanceof DecisionNode) {
-            iter.printNode();
+        } else if (start instanceof DecisionNode) {
+            ((DecisionNode)start).printNode();
             //System.out.println(iter.getFormula());
-            printSpace(level);
-            System.out.println("Then Clause: ");
-            if (((DecisionNode) iter).getThenNode() != null) {
-                print(((DecisionNode) iter).getThenNode(), level + 7);
+            printSpace(level + 4);
+            DebugHelper.print("Then Clause: ");
+            if (((DecisionNode) start).getThenNode() != null) {
+                print(((DecisionNode) start).getThenNode(), level + 4);
             }
-            //printSpace(level);
-            System.out.println("Else Clause: ");
-            if (((DecisionNode) iter).getElseNode() != null)
-                print(((DecisionNode) iter).getElseNode(), level + 7);
-        } else if (iter instanceof GotoNode) {
-            iter.printNode();
-            //printSpace(level);
-            ((GotoNode) iter).getNext().printNode();
-            //print(((GotoNode) iter).getNext(), level);
-        } else if (iter instanceof IterationNode) {
-            iter.printNode();
-            if (iter.getNext() != null) print(iter.getNext(), level);
+            DebugHelper.print("Else Clause: ");
+            if (((DecisionNode) start).getElseNode() != null)
+                print(((DecisionNode) start).getElseNode(), level + 4);
+        } else if (start instanceof GotoNode) {
+            start.printNode();
+            printSpace(level);
+            ((GotoNode) start).getNext().printNode();
+        } else if (start instanceof IterationNode) {
+            ((IterationNode)start).printNode();
+            if (start.getNext() != null) print(start.getNext(), level);
             else return;
-        } else if (iter instanceof EmptyNode) {
-            iter.printNode();
-            print(iter.getNext(), level);
-        } else if (iter instanceof EndConditionNode) {
+        } else if (start instanceof EmptyNode) {
+            ((EmptyNode)start).printNode();
+            print(start.getNext(), level);
+        } else if (start instanceof EndConditionNode) {
             level -= 7;
-        } else if (iter instanceof BeginNode) {
-            iter.printNode();
-            print(iter.getNext(), level);
-            ((BeginNode) iter).getEndNode().printNode();
-            print(((BeginNode) iter).getEndNode().getNext(), level);
-        } else if (iter instanceof EndNode) {
-            iter.printNode();
-            print(iter.getNext(), level);
+        } else if (start instanceof BeginNode) {
+            start.printNode();
+            print(start.getNext(), level);
+            ((BeginNode) start).getEndNode().printNode();
+            print(((BeginNode) start).getEndNode().getNext(), level);
+        } else if (start instanceof EndNode) {
+            ((EndNode)start).printNode();
+            print(start.getNext(), level);
+        } else if (start instanceof CreateThreadNode){
+            ((CreateThreadNode)start).printNode();
+            print(start.getNext(), level);
+        } else if (start instanceof JoinThreadNode) {
+            ((JoinThreadNode)start).printNode();
+            print(start.getNext(), level);
         } else {
-            iter.printNode();
-            print(iter.getNext(), level);
+            start.printNode();
+            print(start.getNext(), level);
         }
     }
 
@@ -113,9 +112,10 @@ public class ControlFlowGraph {
         return (new ControlFlowGraphBuilder()).build(def);
     }
 
-    public ControlFlowGraph build(IASTFunctionDefinition def, ASTFactory ast) {
-        MultiFunctionCFGBuilder multicfg = new MultiFunctionCFGBuilder(ast);
-        return multicfg.build(def);
+    public ControlFlowGraph build(IASTFunctionDefinition def, ASTFactory ast, boolean includeGlobalVars) {
+        MultiFunctionCFGBuilder multiCFG = new MultiFunctionCFGBuilder(ast);
+        ControlFlowGraph cfg = multiCFG.build(def, includeGlobalVars);
+        return cfg;
     }
 
     public CFGNode getStart() {
@@ -183,7 +183,27 @@ public class ControlFlowGraph {
      */
     public void printGraph() {
         if (this != null)
+            System.out.println("==================================================");
+            System.out.println("=========||||||||====||||||||====||||||||=========");
+            System.out.println("=========||==========||==========||===============");
+            System.out.println("=========||==========||||========||==||||=========");
+            System.out.println("=========||==========||==========||====||=========");
+            System.out.println("=========||||||||====||==========||||||||=========");
+            System.out.println("==================================================");
             print(start, 0);
+            System.out.println("==================================================");
+            System.out.println("=========||||||||====||||||||====||||||||=========");
+            System.out.println("=========||==========||==========||===============");
+            System.out.println("=========||==========||||========||==||||=========");
+            System.out.println("=========||==========||==========||====||=========");
+            System.out.println("=========||||||||====||==========||||||||=========");
+            System.out.println("==================================================");
+    }
+
+    public void printGraph(int level) {
+        if (this != null) {
+            print(start, level);
+        }
     }
 
     public void printFuncGraph() {
@@ -200,17 +220,15 @@ public class ControlFlowGraph {
 
     private void printFunc(CFGNode start, int level) {
         CFGNode iter = start;
-        printSpace(level);
+        if (iter != null) printSpace(level);
         if (iter == null) {
             //System.out.println(iter);
             return;
         } else if (iter instanceof DecisionNode) {
             //System.out.println(iter.getFormula());
-            printSpace(level);
             if (((DecisionNode) iter).getThenNode() != null) {
                 printFunc(((DecisionNode) iter).getThenNode(), level);
             }
-            //printSpace(level);
             if (((DecisionNode) iter).getElseNode() != null)
                 printFunc(((DecisionNode) iter).getElseNode(), level);
         } else if (iter instanceof GotoNode) {
@@ -256,7 +274,7 @@ public class ControlFlowGraph {
         } else {
             if (iter != null) {
                 iter.printNode();
-                System.out.println(iter.getFormula());
+                DebugHelper.print(iter.getFormula());
                 printDebug(iter.getNext());
             }
         }

@@ -1,5 +1,7 @@
 package com.mtv.graph.cfg.node;
 
+import com.mtv.DebugHelper.DebugHelper;
+
 import java.util.ArrayList;
 // begin Node ko chua du lieu
 /* node begin the statements if/ for/ while....
@@ -22,6 +24,11 @@ public class BeginNode extends CFGNode {
         adj.add(this.getNext());
         adj.add(endNode);
         return adj;
+    }
+
+    @Override
+    public void printNode() {
+        System.out.println("Begin node");
     }
 
     public DecisionNode getDecisionNode() {

@@ -22,6 +22,7 @@ public class InvariantNode extends PlainNode {
         super.setStatement((IASTStatement) Index.indexInvariant(super.getStatement(), vm));
     }
 
+    @Override
     public void printNode() {
         if (super.getStatement() != null) {
             String expresstion_type = super.getStatement().getClass().getSimpleName();
