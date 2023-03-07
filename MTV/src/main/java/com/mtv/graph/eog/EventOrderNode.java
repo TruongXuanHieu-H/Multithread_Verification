@@ -1,47 +1,41 @@
 package com.mtv.graph.eog;
 
 import com.mtv.DebugHelper.DebugHelper;
+import org.eclipse.cdt.core.dom.ast.IASTExpression;
+
+import java.util.ArrayList;
 
 /*
     EventOrderNode is the present of a read/write event in EventOrderGraph
-    Each node has two pointers point in its previous node and next node
-
-
+    Each node has two pointer lists which point in its previous nodes and next nodes
  */
-public class EventOrderNode {
-    public EventOrderNode previousNode;
-    public EventOrderNode nextNode;
+public abstract class EventOrderNode {
+    public ArrayList<EventOrderNode> previousNodes;
+    public ArrayList<EventOrderNode> nextNodes;
 
-
+    // Original var preference. For examples: x, y, m, n...
     public String varPreference;
-    public EventOrderAction eventOrderAction;
+    // Var preference with suffix. For examples: x_1, y_2...
+    public String suffixVarPref;
+    public InterleavingTracker interleavingTracker;
+    public boolean isVisited = false;
 
-    public EventOrderNode(String varPreference, EventOrderAction action) {
+    public EventOrderNode(String varPreference) {
         this.varPreference = varPreference;
-        this.eventOrderAction = action;
-        this.previousNode = null;
-        this.nextNode = null;
+        this.interleavingTracker = new InterleavingTracker();
+        this.previousNodes = new ArrayList<>();
+        this.nextNodes = new ArrayList<>();
     }
 
-    public EventOrderNode(String varPreference, EventOrderAction action, EventOrderNode previous, EventOrderNode next) {
+    public EventOrderNode(String varPreference, ArrayList<EventOrderNode> previous, ArrayList<EventOrderNode> next) {
         this.varPreference = varPreference;
-        this.eventOrderAction = action;
-        this.previousNode = previous;
-        this.nextNode = next;
-    }
-    public void printNode(int level) {
-        for (int i = 0; i < level; i++) {
-            System.out.print(" ");
-        }
-        if (eventOrderAction == EventOrderAction.Write) {
-            DebugHelper.print("Write: " + varPreference);
-        } else if (eventOrderAction == EventOrderAction.Read) {
-            DebugHelper.print("Read: " + varPreference);
-        } else {
-            // Undefined action
-            DebugHelper.print("Undefined EOAction");
-        }
+        this.interleavingTracker = new InterleavingTracker();
+        this.previousNodes = (previous != null? previous : new ArrayList<>());
+        this.nextNodes = (next != null? next : new ArrayList<>());
     }
 
-
+    public void AddSuffix(int suffix) {
+        suffixVarPref = varPreference + "_" + suffix;
+    }
+    public abstract void printNode(int level);
 }

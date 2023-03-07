@@ -1,85 +1,154 @@
 package com.mtv.graph.eog;
 
 import com.mtv.DebugHelper.DebugHelper;
-import com.mtv.graph.cfg.build.ControlFlowGraph;
 
-import java.util.Random;
-import java.util.random.RandomGenerator;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 public class EventOrderGraph {
+    /*
+        Assume that every EventOrderGraph only has one start point
+     */
     public EventOrderNode startNode;
-    public EventOrderNode endNode;
+
+    /*
+        Due to interleaving (multiple threads), EventOrderGraph can have many end points
+     */
+    public ArrayList<EventOrderNode> endNodes;
 
 
     public EventOrderGraph() {
         startNode = null;
-        endNode = null;
+        endNodes = new ArrayList<>();
     }
 
-    public EventOrderGraph(EventOrderNode startNode, EventOrderNode endNode) {
+    public EventOrderGraph(EventOrderNode startNode, ArrayList<EventOrderNode> endNodes) {
         this.startNode = startNode;
-        this.endNode = endNode;
+        this.endNodes = endNodes;
     }
 
     public EventOrderGraph(EventOrderNode startNode) {
         this.startNode = startNode;
-        this.endNode = startNode;
-        while (endNode.nextNode != null) {
-            endNode = endNode.nextNode;
-        }
+        SearchEndNodes();
     }
 
-    public void printEOG(boolean isReversed) {
-        if (startNode == null || endNode == null) {
-            DebugHelper.print("Empty Event order graph.");
+    public void SearchEndNodes() {
+        ArrayList<EventOrderNode> currentEndNodes = new ArrayList<>();
+        currentEndNodes.add(startNode);
+        ArrayList<EventOrderNode> checkDeadEndResult = CheckDeadEnd(currentEndNodes);
+        while (checkDeadEndResult.size() > 0) {
+            for (EventOrderNode notDeadEndNode : checkDeadEndResult) {
+                currentEndNodes = AddWithoutDuplicate(currentEndNodes, notDeadEndNode.nextNodes);
+                currentEndNodes.remove(notDeadEndNode);
+            }
+            checkDeadEndResult = CheckDeadEnd(currentEndNodes);
+        }
+        this.endNodes = currentEndNodes;
+    }
+
+    public <T> ArrayList<T> AddWithoutDuplicate(ArrayList<T> aL1, ArrayList<T> aL2) {
+        Set<T> nodeSet = new LinkedHashSet<>(aL1);
+        nodeSet.addAll(aL2);
+        return new ArrayList<T>(nodeSet);
+    }
+
+    private ArrayList<EventOrderNode> CheckDeadEnd(ArrayList<EventOrderNode> nodeList) {
+        ArrayList<EventOrderNode> result = new ArrayList<>();
+        for (EventOrderNode node : nodeList) {
+            if (node.nextNodes.size() > 0) {
+                result.add(node);
+            }
+        }
+        return result;
+    }
+
+
+
+    public void printEOG() {
+        System.out.println("----------------------------");
+        printEOG(startNode, 0);
+        ResetVisited();
+        System.out.println("----------------------------");
+    }
+
+    public void printEOG(EventOrderNode startNode , int level) {
+        if (startNode == null || startNode.isVisited) {
             return;
         }
-        if (!isReversed) {
-            EventOrderNode node = startNode;
-            while (node != null) {
-                node.printNode(8);
-                node = node.nextNode;
+        startNode.isVisited = true;
+        startNode.printNode(level);
+        startNode.interleavingTracker.PrintTracker();
+
+        if (startNode.interleavingTracker.GetMarker() == InterleavingTracker.InterleavingMarker.Begin) {
+            for (EventOrderNode nextNode: startNode.nextNodes) {
+                printEOG(nextNode, level);
             }
+            for (EventOrderNode endNode: startNode.interleavingTracker.relatedNodes) {
+                if (endNode.nextNodes.size() > 1) {
+                    DebugHelper.print("Invalid end interleaving node");
+                } else if (endNode.nextNodes.size() == 0) {
+                    //DebugHelper.print("No node behind.");
+                } else {
+                    printEOG(endNode.nextNodes.get(0), level);
+                }
+            }
+        } else if (startNode.interleavingTracker.GetMarker() == InterleavingTracker.InterleavingMarker.End) {
+
         } else {
-            EventOrderNode node = endNode;
-            while (node != null) {
-                node.printNode(8);
-                node = node.previousNode;
+            for (EventOrderNode nextNode: startNode.nextNodes) {
+                printEOG(nextNode, level);
             }
         }
-
     }
 
+    public void ResetVisited() {
+        ResetNodeVisited(startNode);
+    }
+
+    public void ResetNodeVisited(EventOrderNode node) {
+        node.isVisited = false;
+        for (EventOrderNode nextNode: node.nextNodes) {
+            ResetNodeVisited(nextNode);
+        }
+    }
+
+    /*
+        Connect new EOG to a specific point in current EOG
+     */
+    public void AddEOG(EventOrderGraph other, EventOrderNode connectPoint) {
+        if (!connectPoint.nextNodes.contains(other.startNode)) {
+            connectPoint.nextNodes.add(other.startNode);
+        }
+        if (!other.startNode.previousNodes.contains(connectPoint)) {
+            other.startNode.previousNodes.add(connectPoint);
+        }
+        SearchEndNodes();
+    }
+
+    /*
+        Connect new EOG to all end points of current EOG
+     */
     public void AddEOG(EventOrderGraph other) {
-        if (other.startNode == null) {
-
+        if (startNode == null) {
+            this.startNode = other.startNode;
+            this.endNodes = other.endNodes;
         } else {
-            this.endNode.nextNode = other.startNode;
-            other.startNode.previousNode = this.endNode;
-            this.endNode = other.endNode;
+            for (EventOrderNode endNode : endNodes) {
+                ConnectNode(endNode, other.startNode);
+            }
         }
+        SearchEndNodes();
     }
 
 
-
-    public static void main(String[] args) {
-        EventOrderGraph graph = new EventOrderGraph(new EventOrderNode("x", EventOrderAction.Read));
-        String[] varPres = {"x", "y", "m", "n"};
-        EventOrderAction[] eOA = {EventOrderAction.Read, EventOrderAction.Write};
-        RandomGenerator rGen = new Random();
-        for (int i = 0; i < 10; i++) {
-            String varPre = varPres[rGen.nextInt(4)];
-            EventOrderAction action = eOA[rGen.nextInt(2)];
-            DebugHelper.print("Add node: " + varPre + (action == EventOrderAction.Read?" Read": " Write"));
-            EventOrderNode node = new EventOrderNode(varPre, action);
-            EventOrderGraph sub = new EventOrderGraph(node);
-            graph.AddEOG(sub);
+    public static void ConnectNode(EventOrderNode node1, EventOrderNode node2) {
+        if (!node1.nextNodes.contains(node2)) {
+            node1.nextNodes.add(node2);
         }
-        DebugHelper.print("--------------------------------");
-        graph.printEOG(false);
-        DebugHelper.print("--------------------------------");
-        graph.printEOG(true);
-        DebugHelper.print("--------------------------------");
+        if (!node2.previousNodes.contains(node1)) {
+            node2.previousNodes.add(node1);
+        }
     }
-
 }

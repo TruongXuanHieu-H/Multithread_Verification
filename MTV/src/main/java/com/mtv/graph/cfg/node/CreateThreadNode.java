@@ -16,12 +16,12 @@ public class CreateThreadNode extends CFGNode {
         this.restrictionExpression = restrictionExpression;
     }
 
-    protected String threadReference;
-    protected String attributesExpression;
-    protected String funcReference;
+    public String threadReference;
+    public String attributesExpression;
+    public String funcReference;
 
     public ControlFlowGraph funcCFG;
-    protected String restrictionExpression;
+    public String restrictionExpression;
 
     @Override
     public void printNode() {
@@ -29,7 +29,7 @@ public class CreateThreadNode extends CFGNode {
         DebugHelper.print("\tThread reference: " + threadReference);
         DebugHelper.print("\tAttributes expression: " + attributesExpression);
         DebugHelper.print("\tFunction reference: " + funcReference);
-        //funcCFG.printGraph(8);
+        funcCFG.printGraph(8);
         DebugHelper.print("\tRestriction expression: " + restrictionExpression);
 
     }

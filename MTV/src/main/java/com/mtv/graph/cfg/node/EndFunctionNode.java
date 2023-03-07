@@ -16,7 +16,6 @@ public class EndFunctionNode extends CFGNode {
 
     public EndFunctionNode(IASTFunctionDefinition func) {
         this.func = func;
-        DebugHelper.print("Function " + func.getDeclarator().getName() + " is closed");
     }
 
     public IASTFunctionDefinition getFunction() {

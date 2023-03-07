@@ -1,7 +1,7 @@
 #include <pthread.h>
 int x = 1, y =1, m = 0, n = 0;
 void* thr1(void* args) {
-	x = y +1;
+	x = y + m + (n * (m + 1) + 1);
 	m = y;
 	x = 0;
 }
@@ -18,5 +18,4 @@ void main() {
 	pthread_create(&t2, 0, thr2, 0);
 	pthread_join(t1, 0);
 	pthread_join(t2, 0);
-	
 }

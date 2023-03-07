@@ -9,7 +9,6 @@ public class BeginFunctionNode extends CFGNode {
 
     public BeginFunctionNode(IASTFunctionDefinition function) {
         funcDefinition = function;
-        DebugHelper.print("Function " + function.getDeclarator().getName() + " is created");
     }
     public void setFunction(IASTFunctionDefinition function) {
         funcDefinition = function;

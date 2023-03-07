@@ -10,8 +10,8 @@ public class JoinThreadNode extends CFGNode {
         this.threadReference = threadReference;
         this.retvalExpression = retvalExpression;
     }
-    protected String threadReference;
-    protected String retvalExpression;
+    public String threadReference;
+    public String retvalExpression;
     @Override
     public void printNode() {
         DebugHelper.print("Join thread: ");

@@ -7,8 +7,8 @@ import org.eclipse.cdt.core.dom.ast.IASTFunctionDefinition;
 import org.eclipse.cdt.core.dom.ast.IASTStatement;
 
 public class VarAssignedNode extends CFGNode{
-    private IASTStatement statement;
-    private IASTFunctionDefinition func;
+    public IASTStatement statement;
+    public IASTFunctionDefinition func;
 
     public VarAssignedNode(IASTStatement statement) {
         this.statement = statement;

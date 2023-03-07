@@ -18,4 +18,8 @@ public class ASTNodeFactory {
 
     }
 
+    public static IASTName createName(String newName) {
+        return factory.newName(newName.toCharArray());
+    }
+
 }
