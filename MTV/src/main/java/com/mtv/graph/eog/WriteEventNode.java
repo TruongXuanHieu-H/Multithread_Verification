@@ -45,10 +45,6 @@ public class WriteEventNode extends EventOrderNode{
                     IASTName suffixName = ASTNodeFactory.createName(targetEvent.suffixVarPref);
                     readEventNodes_Clone.remove(targetEvent);
                     ((IASTIdExpression) child).setName(suffixName);
-                } else if (child instanceof IASTName) {
-                    ReadEventNode targetEvent = readEventNodes_Clone.get(readEventNodes_Clone.size() - 1);
-                    child = ASTNodeFactory.createName(targetEvent.suffixVarPref);
-                    readEventNodes_Clone.remove(targetEvent);
                 } else if (child instanceof IASTBinaryExpression) {
                     AddSuffixToExpression((IASTExpression) child, readEventNodes_Clone);
                 } else if (child instanceof IASTUnaryExpression) {
