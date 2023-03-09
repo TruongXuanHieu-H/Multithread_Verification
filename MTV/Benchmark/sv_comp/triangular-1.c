@@ -8,46 +8,34 @@
 
 #include <pthread.h>
 
-extern void abort(void);
-#include <assert.h>
-void reach_error() { assert(0); }
 
 int i = 3, j = 6;
 
 int LIMIT = 16;
 
 void *t1(void *arg) {
-	int k;
-  for (k = 0; k < NUM; k++) {
-    i = j + 1;
-  }
-  printf("Terminate t1\n");
-  pthread_exit(NULL);
+	i = j + 1;
+	i = j + 1;
+	i = j + 1;
+	i = j + 1;
+	i = j + 1;
 }
 
 void *t2(void *arg) {
-	int k;
-  for (k = 0; k < NUM; k++) {
-    j = i + 1;
-  }
-  printf("Terminate t2\n");
-  pthread_exit(NULL);
+	j = i + 1;
+	j = i + 1;
+	j = i + 1;
+	j = i + 1;
+	j = i + 1;
 }
 
 int main(int argc, char **argv) {
-  pthread_t id1, id2;
+  	pthread_t id1, id2;
+	
+  	pthread_create(&id1, NULL, t1, NULL);
+  	pthread_create(&id2, NULL, t2, NULL);
 
-  pthread_create(&id1, NULL, t1, NULL);
-  pthread_create(&id2, NULL, t2, NULL);
-
-  int condI = i > LIMIT;
-
-  int condJ = j > LIMIT;
-
-  if (condI || condJ) {
-    ERROR: {reach_error();abort();}
-  }
-
-  return 0;
+	// assert (i <= LIMIT && j <= LIMIT)
+  	return 0;
 }
 

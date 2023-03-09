@@ -9,7 +9,10 @@ void* thr1(void* arg) {
 }
 
 void* thr2(void* arg) {
-    int t;
+    cal();
+}
+void cal() {
+	int t;
     t = x;
     x = t + 1;
 }
@@ -20,7 +23,7 @@ int main(int argc, char* argv[]) {
     x = 0;
     n = 20;
     pthread_create(&t1, 0, thr1, 0);
-	     pthread_create(&t2, 0, thr2, 0);
+	pthread_create(&t2, 0, thr2, 0);
     return 0;
 }
 
