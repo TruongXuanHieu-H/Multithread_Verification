@@ -7,16 +7,13 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class EventOrderGraph {
-    /*
-        Assume that every EventOrderGraph only has one start point
-     */
+    // Assume that every EventOrderGraph only has one start point
     public EventOrderNode startNode;
 
-    /*
-        Due to interleaving (multiple threads), EventOrderGraph can have many end points
-     */
+    // Due to interleaving (multiple threads), EventOrderGraph can have many end points
     public ArrayList<EventOrderNode> endNodes;
 
+    // After this node, program start running threads
     public EventOrderNode interleavingNode;
 
 
@@ -68,10 +65,22 @@ public class EventOrderGraph {
 
 
     public void printEOG() {
-        System.out.println("----------------------------");
+        System.out.println("..................................................");
+        System.out.println(".........||||||||....||||||||....||||||||.........");
+        System.out.println(".........||..........||....||....||...............");
+        System.out.println(".........||||........||....||....||..||||.........");
+        System.out.println(".........||..........||....||....||....||.........");
+        System.out.println(".........||||||||....||||||||....||||||||.........");
+        System.out.println("..................................................");
         printEOG(startNode, 0);
         ResetVisited();
-        System.out.println("----------------------------");
+        System.out.println("..................................................");
+        System.out.println(".........||||||||....||||||||....||||||||.........");
+        System.out.println(".........||..........||....||....||...............");
+        System.out.println(".........||||........||....||....||..||||.........");
+        System.out.println(".........||..........||....||....||....||.........");
+        System.out.println(".........||||||||....||||||||....||||||||.........");
+        System.out.println("..................................................");
     }
 
     public void printEOG(EventOrderNode startNode , int level) {
@@ -105,6 +114,10 @@ public class EventOrderGraph {
     }
 
     public void ResetVisited() {
+        if (startNode == null) {
+            DebugHelper.print("ERROR: Empty start node!");
+            return;
+        }
         ResetNodeVisited(startNode);
     }
 

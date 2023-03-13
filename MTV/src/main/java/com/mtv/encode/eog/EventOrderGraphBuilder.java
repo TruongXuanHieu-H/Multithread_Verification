@@ -27,11 +27,25 @@ public class EventOrderGraphBuilder {
                     AddSuffixVar(eog.startNode, varSuffixMap);
                 }
                 if (eog.interleavingNode == null) {
-                    /*
-                        Interleaving point is not exist or is reset. Create a new one.
-                        Assume there is only one interleaving node in the EOG
-                        So, when interleaving node is null, there is only one end point in cfg
-                     */
+                    // Interleaving point is not exist or is reset. Create a new one.
+                    // Assume there is only one interleaving node in the EOG
+                    // So, when interleaving node is null, there is less than two end point in cfg
+
+                    // When program creates some read/write events then start interleaving,
+                    // there must be one end point in cfg, and then we mark it as start interleaving node.
+                    // But when program start interleaving without create any read/write events before,
+                    // there is not any end point in cfg to mark it as start interleaving node.
+                    // So, in that case, we create an empty node in the start and mark it as start interleaving node
+
+                    if (eog.endNodes.size() == 0) {
+                        EventOrderNode emptyNode = new EventOrderNode(null) {
+                            @Override
+                            public void printNode(int level) {
+                                DebugHelper.print("Empty event node");
+                            }
+                        };
+                        eog.AddEOG(new EventOrderGraph(emptyNode));
+                    }
                     eog.interleavingNode = eog.endNodes.get(0);
                     eog.interleavingNode.interleavingTracker.SetMarker(InterleavingTracker.InterleavingMarker.Begin);
                 }
@@ -77,8 +91,17 @@ public class EventOrderGraphBuilder {
                             joinedNodes.remove(joinedNode);
                         }
                     } else {
+                        // If there are threads joined, continue connecting to the joined point
+                        ArrayList<EventOrderNode> endNodes = eog.endNodes;
+                        for (EventOrderNode endNode: endNodes) {
+                            if (endNode.interleavingTracker.GetMarker() != InterleavingTracker.InterleavingMarker.End) {
+                                connectNodes.add(endNode);
+                            }
+                        }
                         // If there is not any thread joined, connect behind nodes to interleaving point
-                        connectNodes.add(eog.interleavingNode);
+                        if (connectNodes.size() == 0) {
+                            connectNodes.add(eog.interleavingNode);
+                        }
                     }
 
                     IASTStatement statement = ((VarAssignedNode) start).statement;
@@ -137,9 +160,6 @@ public class EventOrderGraphBuilder {
         return eog;
     }
 
-    private void AddReadWriteVarFromBinaryExpr(IASTBinaryExpression binaryExpression) {
-
-    }
 
     private static ArrayList<ReadEventNode> AddReadVars(EventOrderGraph eog, ArrayList<String> readVars, ArrayList<EventOrderNode> connectPoints) {
         EventOrderGraph readVarsEOG = new EventOrderGraph();

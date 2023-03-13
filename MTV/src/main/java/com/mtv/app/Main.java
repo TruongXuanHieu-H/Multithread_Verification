@@ -1,8 +1,12 @@
 package com.mtv.app;
 
+import com.microsoft.z3.Model;
+import com.microsoft.z3.Solver;
+import com.microsoft.z3.Status;
 import com.mtv.debug.DebugHelper;
 import com.mtv.encode.ast.ASTFactory;
 import com.mtv.encode.cfg.build.ControlFlowGraph;
+import com.mtv.encode.constraint.ConstraintManager;
 import com.mtv.encode.eog.EventOrderGraph;
 import com.mtv.encode.eog.EventOrderGraphBuilder;
 import org.eclipse.cdt.core.dom.ast.IASTFunctionDefinition;
@@ -17,7 +21,7 @@ public class Main {
     static String p4Path = "D:\\KLTN\\Multithread_Verification\\MTV\\Benchmark\\sv_comp\\nondet-loop-bound-1.c";
     static String p5Path = "D:\\KLTN\\Multithread_Verification\\MTV\\Benchmark\\sv_comp\\triangular-1.c";
     public static void main(String[] args) throws IOException {
-        ASTFactory ast = new ASTFactory(p4Path);
+        ASTFactory ast = new ASTFactory(p2Path);
         if (ast.getMain() == null) {
             DebugHelper.print("Main function is not detected. Abort.");
             return;
@@ -27,5 +31,12 @@ public class Main {
         cfg.printGraph();
         EventOrderGraph eog = EventOrderGraphBuilder.Build(cfg, new HashMap<>(), false);
         eog.printEOG();
+        Solver solver = ConstraintManager.BuildConstraints(eog);
+        if (solver.check() == Status.SATISFIABLE) {
+            Model model = solver.getModel();
+            System.out.println(model);
+        } else {
+            System.out.println("UNSATIFIABLE");
+        }
     }
 }
