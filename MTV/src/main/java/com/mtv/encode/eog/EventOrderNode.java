@@ -7,13 +7,14 @@ import java.util.ArrayList;
     Each node has two pointer lists which point in its previous nodes and next nodes
  */
 public abstract class EventOrderNode {
-    public ArrayList<EventOrderNode> previousNodes;
-    public ArrayList<EventOrderNode> nextNodes;
-
     // Original var preference. For examples: x, y, m, n...
     public String varPreference;
     // Var preference with suffix. For examples: x_1, y_2...
     public String suffixVarPref;
+
+    public ArrayList<EventOrderNode> previousNodes;
+    public ArrayList<EventOrderNode> nextNodes;
+
     public InterleavingTracker interleavingTracker;
     public boolean isVisited = false;
 

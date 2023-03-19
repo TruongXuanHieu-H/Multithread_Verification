@@ -33,7 +33,7 @@ public class InterleavingTracker {
         return marker;
     }
 
-    public ArrayList<EventOrderNode> relatedNodes;
+    private ArrayList<EventOrderNode> relatedNodes;
     public boolean AddRelatedNode(EventOrderNode node) {
         if (relatedNodes == null) {
             return false;
@@ -44,26 +44,26 @@ public class InterleavingTracker {
             return true;
         }
     }
-    public ArrayList<EventOrderNode> getRelatedNodes() {
+    public ArrayList<EventOrderNode> GetRelatedNodes() {
         return relatedNodes;
     }
 
-    public void PrintTracker() {
+    public void PrintTracker(int level) {
         if (GetMarker() == InterleavingTracker.InterleavingMarker.Begin) {
-            for (EventOrderNode node: getRelatedNodes()) {
-                for (int i = 0; i < 4; i++) {
+            for (EventOrderNode node: relatedNodes) {
+                for (int i = 0; i < level; i++) {
                     System.out.print(" ");
                 }
-                System.out.print("Track to:");
-                node.printNode(4);
+                System.out.print("Track to: ");
+                node.printNode(0);
             }
         } else if (GetMarker() == InterleavingTracker.InterleavingMarker.End) {
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < level; i++) {
                 System.out.print(" ");
             }
-            System.out.print("Track from:");
-            for (EventOrderNode node: getRelatedNodes()) {
-                node.printNode(4);
+            System.out.print("Track from: ");
+            for (EventOrderNode node: relatedNodes) {
+                node.printNode(0);
             }
         } else {
 

@@ -19,6 +19,14 @@ public class ReadEventNode extends EventOrderNode{
         for (int i = 0; i < level; i++) {
             System.out.print(" ");
         }
-        DebugHelper.print(interleavingTracker.GetMarker().toString() + " \t- Read: " + (suffixVarPref == null ? varPreference : suffixVarPref));
+        String marker;
+        if (interleavingTracker.GetMarker().toString().equals("Skip")) {
+            marker = "-----";
+        } else if (interleavingTracker.GetMarker().toString().equals("End")) {
+            marker = "End  ";
+        } else {
+            marker = "Begin";
+        }
+        DebugHelper.print(marker + " - Read: " + (suffixVarPref == null ? varPreference : suffixVarPref));
     }
 }

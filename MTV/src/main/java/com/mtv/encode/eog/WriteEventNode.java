@@ -62,6 +62,14 @@ public class WriteEventNode extends EventOrderNode{
         for (int i = 0; i < level; i++) {
             System.out.print(" ");
         }
-        DebugHelper.print(interleavingTracker.GetMarker().toString() + " \t- Write: " + (suffixVarPref == null ? varPreference : suffixVarPref) + " = " + ExpressionHelper.toString(expression));
+        String marker;
+        if (interleavingTracker.GetMarker().toString().equals("Skip")) {
+            marker = "-----";
+        } else if (interleavingTracker.GetMarker().toString().equals("End")) {
+            marker = "End  ";
+        } else {
+            marker = "Begin";
+        }
+        DebugHelper.print(marker + " - Write: " + (suffixVarPref == null ? varPreference : suffixVarPref) + " = " + ExpressionHelper.toString(expression));
     }
 }

@@ -32,6 +32,7 @@ public class Main {
         EventOrderGraph eog = EventOrderGraphBuilder.Build(cfg, new HashMap<>(), false);
         eog.printEOG();
         Solver solver = ConstraintManager.BuildConstraints(eog);
+
         if (solver.check() == Status.SATISFIABLE) {
             Model model = solver.getModel();
             System.out.println(model);

@@ -54,8 +54,8 @@ public class EventOrderGraphBuilder {
                 threadCreations.put(((CreateThreadNode) start).threadReference, threadEOG);
                 for (EventOrderNode threadEndNode: threadEOG.endNodes) {
                     threadEndNode.interleavingTracker.SetMarker(InterleavingTracker.InterleavingMarker.End);
-                    threadEndNode.interleavingTracker.relatedNodes.add(eog.interleavingNode);
-                    eog.interleavingNode.interleavingTracker.relatedNodes.add(threadEndNode);
+                    threadEndNode.interleavingTracker.AddRelatedNode(eog.interleavingNode);
+                    eog.interleavingNode.interleavingTracker.AddRelatedNode(threadEndNode);
                     unJoinedNodes.add(threadEndNode);
                 }
                 eog.AddEOG(threadEOG, eog.interleavingNode);
@@ -175,6 +175,13 @@ public class EventOrderGraphBuilder {
             if (connectPoints.size() == 0) {
                 eog.AddEOG(readVarsEOG);
             } else {
+                // If specific connect points are exist, we have to connect this event to both them and main thread
+                ArrayList<EventOrderNode> currentEndPoints = eog.endNodes;
+                for (EventOrderNode endNode: eog.endNodes) {
+                    if (endNode.interleavingTracker.GetMarker() != InterleavingTracker.InterleavingMarker.End) {
+                        connectPoints.add(endNode);
+                    }
+                }
                 for (EventOrderNode connectPoint: connectPoints) {
                     eog.AddEOG(readVarsEOG, connectPoint);
                 }
@@ -187,7 +194,7 @@ public class EventOrderGraphBuilder {
         if (writtenVar != "") {
             WriteEventNode node = new WriteEventNode(writtenVar, expression, readEventNodes);
             if (readEventNodes.size() > 0) {
-                // If there are read events which read IdExpression happened before this write event,
+                // If there are read events which read Id/Binary/Unary Expression happened before this write event,
                 // then connect this write event to the last read event
                 eog.AddEOG(new EventOrderGraph(node), readEventNodes.get(readEventNodes.size() - 1));
             } else if (connectPoints.size() > 0) {
@@ -227,7 +234,7 @@ public class EventOrderGraphBuilder {
             for (EventOrderNode nextNode: node.nextNodes) {
                 AddSuffixVar(nextNode, varSuffixMap);
             }
-            for (EventOrderNode endNode: node.interleavingTracker.getRelatedNodes()) {
+            for (EventOrderNode endNode: node.interleavingTracker.GetRelatedNodes()) {
                 if (endNode.nextNodes.size() > 1) {
                     DebugHelper.print("Invalid end interleaving node");
                 } else if (endNode.nextNodes.size() == 0) {

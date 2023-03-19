@@ -72,7 +72,9 @@ public class EventOrderGraph {
         System.out.println(".........||..........||....||....||....||.........");
         System.out.println(".........||||||||....||||||||....||||||||.........");
         System.out.println("..................................................");
-        printEOG(startNode, 0);
+        printEOG(true, startNode, 0, 2);
+        ResetVisited();
+        printEOG(false, startNode, 0, 2);
         ResetVisited();
         System.out.println("..................................................");
         System.out.println(".........||||||||....||||||||....||||||||.........");
@@ -83,34 +85,48 @@ public class EventOrderGraph {
         System.out.println("..................................................");
     }
 
-    public void printEOG(EventOrderNode startNode , int level) {
-        if (startNode == null || startNode.isVisited) {
-            return;
-        }
-        startNode.isVisited = true;
-        startNode.printNode(level);
-        startNode.interleavingTracker.PrintTracker();
-
-        if (startNode.interleavingTracker.GetMarker() == InterleavingTracker.InterleavingMarker.Begin) {
-            for (EventOrderNode nextNode: startNode.nextNodes) {
-                printEOG(nextNode, level);
+    public void printEOG(boolean fullDetail, EventOrderNode startNode , int initLevel, int step) {
+        if (fullDetail) {
+            if (startNode == null) {
+                return;
             }
-            for (EventOrderNode endNode: startNode.interleavingTracker.relatedNodes) {
-                if (endNode.nextNodes.size() > 1) {
-                    DebugHelper.print("Invalid end interleaving node");
-                } else if (endNode.nextNodes.size() == 0) {
-                    //DebugHelper.print("No node behind.");
-                } else {
-                    printEOG(endNode.nextNodes.get(0), level);
+            startNode.isVisited = true;
+            startNode.printNode(initLevel);
+            startNode.interleavingTracker.PrintTracker(initLevel);
+
+            for (EventOrderNode nextNode: startNode.nextNodes) {
+                printEOG(fullDetail, nextNode, initLevel + step, step);
+            }
+        } else {
+            if (startNode == null || startNode.isVisited) {
+                return;
+            }
+            startNode.isVisited = true;
+            startNode.printNode(initLevel);
+            startNode.interleavingTracker.PrintTracker(initLevel);
+
+            if (startNode.interleavingTracker.GetMarker() == InterleavingTracker.InterleavingMarker.Begin) {
+                for (EventOrderNode nextNode: startNode.nextNodes) {
+                    printEOG(fullDetail, nextNode, initLevel + step, step);
+                }
+                for (EventOrderNode endNode: startNode.interleavingTracker.GetRelatedNodes()) {
+                    if (endNode.nextNodes.size() > 1) {
+                        DebugHelper.print("Invalid end interleaving node");
+                    } else if (endNode.nextNodes.size() == 0) {
+                        //DebugHelper.print("No node behind.");
+                    } else {
+                        printEOG(fullDetail, endNode.nextNodes.get(0), initLevel + step, step);
+                    }
+                }
+            } else if (startNode.interleavingTracker.GetMarker() == InterleavingTracker.InterleavingMarker.End) {
+
+            } else {
+                for (EventOrderNode nextNode: startNode.nextNodes) {
+                    printEOG(fullDetail, nextNode, initLevel + step, step);
                 }
             }
-        } else if (startNode.interleavingTracker.GetMarker() == InterleavingTracker.InterleavingMarker.End) {
-
-        } else {
-            for (EventOrderNode nextNode: startNode.nextNodes) {
-                printEOG(nextNode, level);
-            }
         }
+
     }
 
     public void ResetVisited() {
