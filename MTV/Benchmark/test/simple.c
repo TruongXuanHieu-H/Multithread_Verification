@@ -2,15 +2,15 @@
 int x = 1, y = 1, m = 0, n = 0;
 void* thr1(void* args) {
 	x = y + 1; 
-          m = y; 
-          x = 0; 
+    m = y; 
+	x = 0; 
 
 }
 
 void* thr2(void* args) {
 	y = x + 1; 
-          n = x; 
-          y = 0; 
+    n = x; 
+    y = 0; 
  
 
 }
@@ -21,6 +21,4 @@ void main() {
 	pthread_create(&t2, 0, thr2, 0);
 	pthread_join(t1, 0);
 	pthread_join(t2, 0);
-	m = m;
-	n = n;
 }

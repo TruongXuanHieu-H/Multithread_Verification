@@ -5,6 +5,7 @@ import com.mtv.encode.ast.ASTFactory;
 import com.mtv.encode.ast.FunctionHelper;
 import com.mtv.encode.ast.IASTVariable;
 import com.mtv.encode.cfg.node.*;
+import com.mtv.encode.cfg.utils.ExpressionHelper;
 import com.mtv.encode.cfg.utils.ExpressionModifier;
 import org.eclipse.cdt.core.dom.ast.*;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPNodeFactory;
@@ -28,7 +29,6 @@ public class MultiFunctionCFGBuilder {
             return null;
         }
         // Create empty control flow graph
-
         ControlFlowGraph prvCfg = new ControlFlowGraph();
         // Create CPP node factory, where is used to build node for control flow graph
         CPPNodeFactory factory = new CPPNodeFactory();
@@ -183,7 +183,7 @@ public class MultiFunctionCFGBuilder {
     private ControlFlowGraph createArguments(IASTFunctionCallExpression callExpression, IASTFunctionDefinition currentFunc) {
         ControlFlowGraph cfg = new ControlFlowGraph();
         String funcName = callExpression.getFunctionNameExpression().toString();
-        CFGNode plainNode;
+        CFGNode varAssignedNode;
         IASTFunctionDefinition func = FunctionHelper.getFunction(ast.getListFunction(), funcName);
 
         ArrayList<IASTVariable> params = FunctionHelper.getParameters(func);
@@ -209,9 +209,9 @@ public class MultiFunctionCFGBuilder {
             right = (IASTExpression) ExpressionModifier.changeVariableName((IASTExpression) arguments[i].copy(), currentFunc);
             expression = factory.newBinaryExpression(IASTBinaryExpression.op_assign, left, right);
             statement = factory.newExpressionStatement(expression);
-            plainNode = new PlainNode(statement);
-
-            cfg.concat(new ControlFlowGraph(plainNode, plainNode));
+            varAssignedNode = new VarAssignedNode(statement);
+            DebugHelper.print(ExpressionHelper.toString(statement));
+            cfg.concat(new ControlFlowGraph(varAssignedNode, varAssignedNode));
         }
         return cfg;
     }

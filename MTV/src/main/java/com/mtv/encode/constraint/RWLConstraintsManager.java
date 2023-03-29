@@ -10,9 +10,6 @@ import org.javatuples.Triplet;
 import java.util.ArrayList;
 
 public class RWLConstraintsManager {
-    private static void AddEmptyConstraint(Context ctx, Solver solver) {
-        solver.add(ctx.mkBool(true));
-    }
     // Create all read/write link constraints in the event order graph using given context then store them in the given solver
     // Return all read/write link constraints' signatures
     public static ArrayList<Triplet<String, ReadEventNode, WriteEventNode>> CreateRWLC_ProgramFromProgram(Context ctx, Solver solver, EventOrderGraph eog) {
@@ -51,7 +48,6 @@ public class RWLConstraintsManager {
             if (preInterSearchNode == eog.interleavingNode || preInterSearchNode.nextNodes.size() == 0) break;
             preInterSearchNode = preInterSearchNode.nextNodes.get(0);
         }
-        AddEmptyConstraint(ctx, solver);
 
         // TODO: Create interleaving read-write link constraints
         // If interleavingNode is not exist, then the program is not interleave,
@@ -63,7 +59,6 @@ public class RWLConstraintsManager {
             }
         }
 
-        AddEmptyConstraint(ctx, solver);
         // TODO: Create post-interleaving read-write link constraints
         // If interleavingNode is not exist, then the program is not interleave,
         // so we don't have to create post-interleaving RWLC
@@ -89,7 +84,6 @@ public class RWLConstraintsManager {
                 CreateRWLC_NodeFromProgram(ctx, solver, RWLSignatures,readEventNode, eog);
             }
         }
-        AddEmptyConstraint(ctx, solver);
         return RWLSignatures;
     }
     private static void CreateRWLC_ThreadFromProgram(Context ctx, Solver solver,

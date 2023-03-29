@@ -12,16 +12,11 @@ import java.util.ArrayList;
 
 
 public class WriteConstraintsManager {
-    private static void AddEmptyConstraint(Context ctx, Solver solver) {
-        solver.add(ctx.mkBool(true));
-    }
-
     // Create all write constraints in the event order graph using given context then store them in the given solver
     public static void CreateWriteConstraints(Context ctx, Solver solver, EventOrderGraph eventOrderGraph) {
         EventOrderNode trackNode = eventOrderGraph.startNode;
         CreateWriteConstraint(ctx, solver, trackNode);
         eventOrderGraph.ResetVisited();
-        AddEmptyConstraint(ctx, solver);
     }
     private static void CreateWriteConstraint(Context ctx, Solver solver, EventOrderNode node) {
         if (node == null) {

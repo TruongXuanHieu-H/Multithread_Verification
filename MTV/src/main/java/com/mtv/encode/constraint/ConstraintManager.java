@@ -27,10 +27,7 @@ public class ConstraintManager {
 
         WriteConstraintsManager.CreateWriteConstraints(ctx, solver, eog);
         ArrayList<Triplet<String, ReadEventNode, WriteEventNode>> RWLSignatures = RWLConstraintsManager.CreateRWLC_ProgramFromProgram(ctx, solver, eog);
-
         OrderConstraintsManager.CreateOrderConstraints(ctx, solver, RWLSignatures, eog);
-        solver.add(ctx.mkEq(ctx.mkIntConst("m_3"), ctx.mkInt(1)));
-        solver.add(ctx.mkEq(ctx.mkIntConst("n_3"), ctx.mkInt(1)));
 
         PrintAssertions(solver);
         return solver;

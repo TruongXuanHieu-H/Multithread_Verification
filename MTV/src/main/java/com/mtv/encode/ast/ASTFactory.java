@@ -4,6 +4,7 @@ import com.mtv.debug.DebugHelper;
 import org.eclipse.cdt.core.dom.ast.*;
 import org.eclipse.cdt.core.dom.ast.gnu.cpp.GPPLanguage;
 import org.eclipse.cdt.core.parser.*;
+import org.eclipse.cdt.core.parser.util.ASTPrinter;
 import org.eclipse.core.runtime.CoreException;
 
 import java.util.ArrayList;
@@ -46,6 +47,9 @@ public class ASTFactory {
         }
     }
 
+    public static void PrintAST() {
+        ASTPrinter.print(translationUnit);
+    }
     private static void printTree(IASTNode node, int index) {
         IASTNode[] children = node.getChildren();
 

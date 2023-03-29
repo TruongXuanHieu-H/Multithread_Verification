@@ -14,7 +14,7 @@ int i = 3, j = 6;
 int LIMIT = 16;
 
 void *t1(void *arg) {
-	i = j % (j * (j + j) + j);
+	i = j + 1;
 	i = j + 1;
 	i = j + 1;
 	i = j + 1;
@@ -22,7 +22,7 @@ void *t1(void *arg) {
 }
 
 void *t2(void *arg) {
-	j = i * (i * (i + i) + i) + 1;
+	j = i + 1;
 	j = i + 1;
 	j = i + 1;
 	j = i + 1;
@@ -34,7 +34,8 @@ int main(int argc, char **argv) {
 	
   	pthread_create(&id1, NULL, t1, NULL);
   	pthread_create(&id2, NULL, t2, NULL);
-
+	pthread_join(id1, 0);
+	pthread_join(id2, 0);
 	// assert (i <= LIMIT && j <= LIMIT)
   	return 0;
 }
