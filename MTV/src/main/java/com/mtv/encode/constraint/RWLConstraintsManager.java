@@ -1,5 +1,6 @@
 package com.mtv.encode.constraint;
 
+import com.microsoft.z3.BoolSort;
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Expr;
 import com.microsoft.z3.Solver;
@@ -26,19 +27,19 @@ public class RWLConstraintsManager {
         while (preInterSearchNode != null) {
             if (preInterSearchNode.varPreference != null) {
                 if (preInterSearchNode instanceof ReadEventNode) {
-                    EventOrderNode previosNode = preInterSearchNode.previousNodes.get(0);
-                    while ((!(previosNode instanceof WriteEventNode))
-                            || (!(previosNode.varPreference.equals(preInterSearchNode.varPreference)))) {
-                        if (previosNode.previousNodes.size() == 0) {
+                    EventOrderNode previousNode = preInterSearchNode.previousNodes.get(0);
+                    while ((!(previousNode instanceof WriteEventNode))
+                            || (!(previousNode.varPreference.equals(preInterSearchNode.varPreference)))) {
+                        if (previousNode.previousNodes.size() == 0) {
                             break;
                         } else {
-                            previosNode = previosNode.previousNodes.get(0);
+                            previousNode = previousNode.previousNodes.get(0);
                         }
                     }
-                    if (previosNode instanceof WriteEventNode
-                            && previosNode.varPreference.equals(preInterSearchNode.varPreference)) {
+                    if (previousNode instanceof WriteEventNode
+                            && previousNode.varPreference.equals(preInterSearchNode.varPreference)) {
                         String signature = CreateRWLC_NodeFromNode(ctx, solver, RWLSignatures,
-                                (ReadEventNode) preInterSearchNode, (WriteEventNode) previosNode);
+                                (ReadEventNode) preInterSearchNode, (WriteEventNode) previousNode);
                         CreateRWLC_OneAmongAll(ctx, solver, new String[] {signature});
                     }
                 }
