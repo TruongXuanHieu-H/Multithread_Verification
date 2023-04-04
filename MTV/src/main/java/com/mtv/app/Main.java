@@ -22,7 +22,7 @@ public class Main {
     static String p4Path = "D:\\KLTN\\Multithread_Verification\\MTV\\Benchmark\\sv_comp\\nondet-loop-bound-1.c"; // Result: UNSATISFIABLE with n = 20
     static String p5Path = "D:\\KLTN\\Multithread_Verification\\MTV\\Benchmark\\sv_comp\\triangular-1.c"; // Result: UNSATISFIABLE
     public static void main(String[] args) throws IOException {
-        Verify(p3Path);
+        Verify(p2Path);
     }
 
     private static void Verify(String filePath) {
@@ -43,7 +43,7 @@ public class Main {
         if (filePath.equals(p1Path)) {
 
         } else if (filePath.equals(p2Path)){
-            solver.add(ctx.mkNot(ctx.mkAnd(ctx.mkEq(ctx.mkIntConst("m_1"), ctx.mkInt(1)), ctx.mkEq(ctx.mkIntConst("n_1"), ctx.mkInt(1)))));
+            solver.add(/*ctx.mkNot*/(ctx.mkAnd(ctx.mkEq(ctx.mkIntConst("m_1"), ctx.mkInt(2)), ctx.mkEq(ctx.mkIntConst("n_1"), ctx.mkInt(3)))));
         } else if (filePath.equals(p3Path)) {
             solver.add(ctx.mkAnd(ctx.mkEq(ctx.mkIntConst("cond1_main_0"), ctx.mkInt(16)), ctx.mkEq(ctx.mkIntConst("cond2_main_0"), ctx.mkInt(5))));
         } else if (filePath.equals(p4Path)) {

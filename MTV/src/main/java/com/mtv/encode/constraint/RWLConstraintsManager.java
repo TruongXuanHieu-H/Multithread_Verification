@@ -181,7 +181,7 @@ public class RWLConstraintsManager {
         solver.add(ctx.mkAtMost(signals, 1));
     }
     public static String CreateRWLCSignature(ReadEventNode readEventNode, WriteEventNode writeEventNode) {
-        return "E_" + readEventNode.suffixVarPref + "_" + writeEventNode.suffixVarPref;
+        return "E_"+ writeEventNode.suffixVarPref  + "_" + readEventNode.suffixVarPref;
     }
 
     private static boolean CheckChildNode(EventOrderNode root, EventOrderNode check) {

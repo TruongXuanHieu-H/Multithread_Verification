@@ -121,26 +121,26 @@ public class OrderConstraintsManager {
                                                  Map.Entry<ReadEventNode, Pair<ArrayList<EventOrderNode>, ArrayList<EventOrderNode>>> readEntry,
                                                  Map.Entry<WriteEventNode, Pair<ArrayList<EventOrderNode>, ArrayList<EventOrderNode>>> writeEntry) {
         String positiveSignature = RWLConstraintsManager.CreateRWLCSignature(readEntry.getKey(), writeEntry.getKey());
-        ArrayList<String> negativeSignatures = CreateNegativeSignatures(readEntry, writeEntry);
-        ArrayList<String> deducedNegativeSignatures = CreateDeducedNegativeSignatures(readEntry, writeEntry);
 
+        ArrayList<String> negativeSignatures = CreateNegativeSignatures(readEntry, writeEntry);
         ArrayList<BoolExpr> availableNegativeSignatures = new ArrayList<>();
         for (String negativeSignature: negativeSignatures) {
             if (availableRWLSignatures.contains(negativeSignature)) {
                 availableNegativeSignatures.add(ctx.mkBoolConst(negativeSignature));
             }
         }
+        if (availableNegativeSignatures.size() > 0) {
+            BoolExpr negativeExpression = ctx.mkNot(ctx.mkOr(availableNegativeSignatures.toArray(new BoolExpr[0])));
+            BoolExpr fullExpression = ctx.mkImplies(ctx.mkBoolConst(positiveSignature), negativeExpression);
+            solver.add(fullExpression);
+        }
+
+        ArrayList<String> deducedNegativeSignatures = CreateDeducedNegativeSignatures(readEntry, writeEntry);
         ArrayList<BoolExpr> availableDeducedNegativeSignatures = new ArrayList<>();
         for (String deducedNegativeSignature: deducedNegativeSignatures) {
             if (availableRWLSignatures.contains(deducedNegativeSignature)) {
                 availableDeducedNegativeSignatures.add(ctx.mkBoolConst(deducedNegativeSignature));
             }
-        }
-
-        if (availableNegativeSignatures.size() > 0) {
-            BoolExpr negativeExpression = ctx.mkNot(ctx.mkOr(availableNegativeSignatures.toArray(new BoolExpr[0])));
-            BoolExpr fullExpression = ctx.mkImplies(ctx.mkBoolConst(positiveSignature), negativeExpression);
-            solver.add(fullExpression);
         }
         if (availableDeducedNegativeSignatures.size() > 0) {
             BoolExpr negativeExpression = ctx.mkNot(ctx.mkOr(availableDeducedNegativeSignatures.toArray(new BoolExpr[0])));
@@ -215,23 +215,11 @@ public class OrderConstraintsManager {
 
         ArrayList<String> deducedNegativeSignatures = new ArrayList<>();
 
-        // All previous nodes of write node
-        ArrayList<EventOrderNode> previousWNNodes = FindAllPreviousNodes(writeEntry.getKey());
-        // All previous write nodes of write node which have the same var with read node
-        ArrayList<WriteEventNode> previousWNWriteNodes = new ArrayList<>();
-        for (EventOrderNode previousWNNode: previousWNNodes) {
-            if (previousWNNode instanceof WriteEventNode previousWNWriteNode
-                    && !CheckDescendantNode(previousWNNode, readEntry.getKey())
-                    && !CheckDescendantNode(readEntry.getKey(), previousWNNode)
-                    && previousWNWriteNode.varPreference.equals(readEntry.getKey().varPreference)) {
-                previousWNWriteNodes.add(previousWNWriteNode);
-            }
-        }
-
-        // All following nodes of write node
+        // Stored following nodes of write node
         ArrayList<EventOrderNode> followingWNNodes = FindAllFollowingNodes(writeEntry.getKey());
-        // All following write nodes of write node which have the same var with read node
+        // Stored following write nodes of write node which have the same var with read node
         ArrayList<WriteEventNode> followingWNWriteNodes = new ArrayList<>();
+        // Add following write nodes of write node to stored
         for (EventOrderNode followingWNNode: followingWNNodes) {
             if (followingWNNode instanceof WriteEventNode followingWNWriteNode
                     && !CheckDescendantNode(followingWNNode, readEntry.getKey())
@@ -241,23 +229,14 @@ public class OrderConstraintsManager {
             }
         }
 
-        // All previous nodes of read node
+        // Stored previous nodes of read node
         ArrayList<EventOrderNode> previousRNNodes = FindAllPreviousNodes(readEntry.getKey());
-        // All previous write nodes of read node
+        // Stored previous write nodes of read node
         ArrayList<WriteEventNode> previousRNWriteNodes = new ArrayList<>();
+        // Add previous write nodes of read node to stored
         for (EventOrderNode previousRNNode: previousRNNodes) {
             if (previousRNNode instanceof WriteEventNode previousRNWriteNode) {
                 previousRNWriteNodes.add(previousRNWriteNode);
-            }
-        }
-
-        // All following nodes of read node
-        ArrayList<EventOrderNode> followingRNNodes = FindAllFollowingNodes((readEntry.getKey()));
-        // All following write nodes of read node
-        ArrayList<WriteEventNode> followingRNWriteNodes = new ArrayList<>();
-        for (EventOrderNode followingRNNode: followingRNNodes) {
-            if (followingRNNode instanceof WriteEventNode followingRNWriteNode) {
-                followingRNWriteNodes.add(followingRNWriteNode);
             }
         }
 
@@ -266,7 +245,7 @@ public class OrderConstraintsManager {
             ArrayList<EventOrderNode> deducedFollowingNodes = FindAllFollowingNodes(followingWNWriteNode);
             for (EventOrderNode deducedFollowingNode: deducedFollowingNodes) {
                 if (deducedFollowingNode instanceof ReadEventNode deducedFollowingReadNode
-                    && !deducedFollowingReadNodes.contains(deducedFollowingReadNode)) {
+                        && !deducedFollowingReadNodes.contains(deducedFollowingReadNode)) {
                     deducedFollowingReadNodes.add(deducedFollowingReadNode);
                 }
             }
@@ -285,6 +264,32 @@ public class OrderConstraintsManager {
             }
         }
 
+        /*
+        // TODO:
+        // All previous nodes of write node
+        ArrayList<EventOrderNode> previousWNNodes = FindAllPreviousNodes(writeEntry.getKey());
+        // All previous write nodes of write node which have the same var with read node
+        ArrayList<WriteEventNode> previousWNWriteNodes = new ArrayList<>();
+        for (EventOrderNode previousWNNode: previousWNNodes) {
+            if (previousWNNode instanceof WriteEventNode previousWNWriteNode
+                    && !CheckDescendantNode(previousWNNode, readEntry.getKey())
+                    && !CheckDescendantNode(readEntry.getKey(), previousWNNode)
+                    && previousWNWriteNode.varPreference.equals(readEntry.getKey().varPreference)) {
+                previousWNWriteNodes.add(previousWNWriteNode);
+            }
+        }
+
+        // TODO:
+        // All following nodes of read node
+        ArrayList<EventOrderNode> followingRNNodes = FindAllFollowingNodes((readEntry.getKey()));
+        // All following write nodes of read node
+        ArrayList<WriteEventNode> followingRNWriteNodes = new ArrayList<>();
+        for (EventOrderNode followingRNNode: followingRNNodes) {
+            if (followingRNNode instanceof WriteEventNode followingRNWriteNode) {
+                followingRNWriteNodes.add(followingRNWriteNode);
+            }
+        }
+        */
         return deducedNegativeSignatures;
     }
 

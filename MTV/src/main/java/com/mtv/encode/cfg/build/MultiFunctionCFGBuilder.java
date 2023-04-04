@@ -119,24 +119,26 @@ public class MultiFunctionCFGBuilder {
             String attributeExpression = arguments[1].getRawSignature();
             String funcReference = arguments[2].getRawSignature();
             String restrictionExpression = arguments[3].getRawSignature();
-
             ControlFlowGraph funcCFG = new ControlFlowGraph(ast.getFunction(funcReference), ast, false);
             CreateThreadNode createThreadNode = new CreateThreadNode(threadReference, attributeExpression, funcReference, funcCFG, restrictionExpression);
-
-
             return new ControlFlowGraph(createThreadNode, createThreadNode);
         } else if (targetedFuncName.equals("pthread_join")) {
             IASTInitializerClause[] arguments = callExpression.getArguments();
             String threadReference = arguments[0].getRawSignature() + "_" + currentFunc.getDeclarator().getName();
-            String retvalExpression = arguments[1].getRawSignature();
-
-            JoinThreadNode joinThreadNode = new JoinThreadNode(threadReference, retvalExpression);
-
+            String returnValExpression = arguments[1].getRawSignature();
+            JoinThreadNode joinThreadNode = new JoinThreadNode(threadReference, returnValExpression);
             return new ControlFlowGraph(joinThreadNode, joinThreadNode);
         } else if (targetedFuncName.equals("abort")) {
             AbortNode abortNode = new AbortNode();
             return new ControlFlowGraph(abortNode, abortNode);
-        } else {
+        } /*else if (targetedFuncName.equals("assert")) {
+            DebugHelper.print("Assert here");
+            IASTInitializerClause[] arguments = callExpression.getArguments();
+            for (IASTInitializerClause arg : arguments) {
+                DebugHelper.print(arg.getRawSignature());
+            }
+            return new ControlFlowGraph(null, null);
+        } */else {
             IASTFunctionDefinition func = FunctionHelper.getFunction(ast.getListFunction(), targetedFuncName);
 
             if (func == null) {
