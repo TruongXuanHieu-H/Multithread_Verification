@@ -2,10 +2,7 @@ package com.mtv.encode.eog;
 
 import com.mtv.debug.DebugHelper;
 import com.mtv.encode.cfg.build.ControlFlowGraph;
-import com.mtv.encode.cfg.node.CFGNode;
-import com.mtv.encode.cfg.node.CreateThreadNode;
-import com.mtv.encode.cfg.node.JoinThreadNode;
-import com.mtv.encode.cfg.node.VarAssignedNode;
+import com.mtv.encode.cfg.node.*;
 import org.eclipse.cdt.core.dom.ast.*;
 
 import java.util.ArrayList;
@@ -70,89 +67,86 @@ public class EventOrderGraphBuilder {
                         joinedNode.printNode(8);
                     }
                 }
-
-            } else {
-                if (start instanceof VarAssignedNode) {
-                    ArrayList<EventOrderNode> connectNodes = new ArrayList<>();
-                    if (eog.interleavingNode == null) {
-                        // When interleaving node is not created, connect new node to EOG's current end node (expect 1 end node)
-                        if (eog.endNodes.size() > 1) {
-                            DebugHelper.print("Number of end nodes is invalid. Expected 1 and have " + eog.endNodes.size());
-                        }
-                        for (EventOrderNode endNode: eog.endNodes) {
-                            connectNodes.add(endNode);
-                        }
-                    } else if (joinedNodes.size() > 0) {
-                        // If there are some threads are joined, store their end nodes then connect them with other nodes behind
-                        for (EventOrderNode joinedNode: joinedNodes) {
-                            connectNodes.add(joinedNode);
-                        }
-                        for (EventOrderNode joinedNode: connectNodes) {
-                            joinedNodes.remove(joinedNode);
-                        }
-                    } else {
-                        // If there are threads joined, continue connecting to the joined point
-                        ArrayList<EventOrderNode> endNodes = eog.endNodes;
-                        for (EventOrderNode endNode: endNodes) {
-                            if (endNode.interleavingTracker.GetMarker() != InterleavingTracker.InterleavingMarker.End) {
-                                connectNodes.add(endNode);
-                            }
-                        }
-                        // If there is not any thread joined, connect behind nodes to interleaving point
-                        if (connectNodes.size() == 0) {
-                            connectNodes.add(eog.interleavingNode);
-                        }
+            } else if (start instanceof VarAssignedNode) {
+                ArrayList<EventOrderNode> connectNodes = new ArrayList<>();
+                if (eog.interleavingNode == null) {
+                    // When interleaving node is not created, connect new node to EOG's current end node (expect 1 end node)
+                    if (eog.endNodes.size() > 1) {
+                        DebugHelper.print("Number of end nodes is invalid. Expected 1 and have " + eog.endNodes.size());
                     }
-
-                    IASTStatement statement = ((VarAssignedNode) start).statement;
-                    IASTExpression expression = ((IASTExpressionStatement) statement).getExpression();
-
-                    if (expression instanceof IASTBinaryExpression) {
-                        IASTBinaryExpression binaryExpression = (IASTBinaryExpression) expression;
-                        IASTExpression operand1 = binaryExpression.getOperand1();
-                        IASTExpression operand2 = binaryExpression.getOperand2();
-
-                        // In each IASTBinaryExpression, there is only one variable which can be written,
-                        // but many variables which can be read.
-                        String writtenVar = "";
-                        ArrayList<String> readVars = new ArrayList<>();
-
-                        if (operand1 instanceof IASTIdExpression) {
-                            // Assume that operand1 is a variable (because we store some value in it)
-                            writtenVar = ((IASTIdExpression) operand1).getName().toString();
-
-                            // Operand2 can be either a variable or an expression, so we have to split them and check both cases
-                            if (operand2 instanceof IASTIdExpression) {
-                                String variableName2 = ((IASTIdExpression) operand2).getName().toString();
-                                readVars.add(variableName2);
-                            } else if (operand2 instanceof IASTBinaryExpression) {
-                                IASTBinaryExpression subBinaryExpr = (IASTBinaryExpression) operand2;
-                                ArrayList<IASTIdExpression> varExpressions = GetIdExpressionFromBinaryExpression(subBinaryExpr);
-                                for (IASTIdExpression varExpression: varExpressions) {
-                                    readVars.add(varExpression.getName().toString());
-                                }
-                            } else if (operand2 instanceof IASTUnaryExpression) {
-                                IASTUnaryExpression subBinaryExpr = (IASTUnaryExpression) operand2;
-                                ArrayList<IASTIdExpression> varExpressions = GetIDExpressionFromUnaryExpression(subBinaryExpr);
-                                for (IASTIdExpression varExpression : varExpressions) {
-                                    readVars.add(varExpression.getName().toString());
-                                }
-                            } else {
-                                // DebugHelper.print("Operand2 in " + ExpressionHelper.toString(statement) + " is not valid");
-                            }
-                        } else {
-                            // DebugHelper.print("Operand1 in " + ExpressionHelper.toString(statement) + " is not an IdExpression");
-                        }
-
-                        ArrayList<ReadEventNode> readEventNodes = AddReadVars(eog, readVars, connectNodes);
-                        AddWrittenVar(eog, writtenVar, operand2, readEventNodes, connectNodes);
-                    } else {
-                        // This may never happen due to VarAssignedNode is created on a IASTBinaryExpression
-                        // DebugHelper.print("Statement " + ExpressionHelper.toString(statement) + " is not a IASTBinaryExpression");
+                    for (EventOrderNode endNode: eog.endNodes) {
+                        connectNodes.add(endNode);
+                    }
+                } else if (joinedNodes.size() > 0) {
+                    // If there are some threads are joined, store their end nodes then connect them with other nodes behind
+                    for (EventOrderNode joinedNode: joinedNodes) {
+                        connectNodes.add(joinedNode);
+                    }
+                    for (EventOrderNode joinedNode: connectNodes) {
+                        joinedNodes.remove(joinedNode);
                     }
                 } else {
-                    // Other nodes are skipped because we only care about read-write links
+                    // If there are threads joined, continue connecting to the joined point
+                    ArrayList<EventOrderNode> endNodes = eog.endNodes;
+                    for (EventOrderNode endNode: endNodes) {
+                        if (endNode.interleavingTracker.GetMarker() != InterleavingTracker.InterleavingMarker.End) {
+                            connectNodes.add(endNode);
+                        }
+                    }
+                    // If there is not any thread joined, connect behind nodes to interleaving point
+                    if (connectNodes.size() == 0) {
+                        connectNodes.add(eog.interleavingNode);
+                    }
                 }
+
+                IASTStatement statement = ((VarAssignedNode) start).statement;
+                IASTExpression expression = ((IASTExpressionStatement) statement).getExpression();
+
+                if (expression instanceof IASTBinaryExpression) {
+                    IASTBinaryExpression binaryExpression = (IASTBinaryExpression) expression;
+                    IASTExpression operand1 = binaryExpression.getOperand1();
+                    IASTExpression operand2 = binaryExpression.getOperand2();
+
+                    // In each IASTBinaryExpression, there is only one variable which can be written,
+                    // but many variables which can be read.
+                    String writtenVar = "";
+                    ArrayList<String> readVars = new ArrayList<>();
+
+                    if (operand1 instanceof IASTIdExpression) {
+                        // Assume that operand1 is a variable (because we store some value in it)
+                        writtenVar = ((IASTIdExpression) operand1).getName().toString();
+
+                        // Operand2 can be either a variable or an expression, so we have to split them and check both cases
+                        if (operand2 instanceof IASTIdExpression) {
+                            String variableName2 = ((IASTIdExpression) operand2).getName().toString();
+                            readVars.add(variableName2);
+                        } else if (operand2 instanceof IASTBinaryExpression) {
+                            IASTBinaryExpression subBinaryExpr = (IASTBinaryExpression) operand2;
+                            ArrayList<IASTIdExpression> varExpressions = GetIdExpressionFromBinaryExpression(subBinaryExpr);
+                            for (IASTIdExpression varExpression: varExpressions) {
+                                readVars.add(varExpression.getName().toString());
+                            }
+                        } else if (operand2 instanceof IASTUnaryExpression) {
+                            IASTUnaryExpression subBinaryExpr = (IASTUnaryExpression) operand2;
+                            ArrayList<IASTIdExpression> varExpressions = GetIDExpressionFromUnaryExpression(subBinaryExpr);
+                            for (IASTIdExpression varExpression : varExpressions) {
+                                readVars.add(varExpression.getName().toString());
+                            }
+                        } else {
+                            // DebugHelper.print("Operand2 in " + ExpressionHelper.toString(statement) + " is not valid");
+                        }
+                    } else {
+                        // DebugHelper.print("Operand1 in " + ExpressionHelper.toString(statement) + " is not an IdExpression");
+                    }
+
+                    ArrayList<ReadEventNode> readEventNodes = AddReadVars(eog, readVars, connectNodes);
+                    AddWrittenVar(eog, writtenVar, operand2, readEventNodes, connectNodes);
+                } else {
+                    // This may never happen due to VarAssignedNode is created on a IASTBinaryExpression
+                    // DebugHelper.print("Statement " + ExpressionHelper.toString(statement) + " is not a IASTBinaryExpression");
+                }
+            } else {
+                // Other nodes are skipped because we only care about read-write links
             }
             start = start.getNext();
         }

@@ -18,15 +18,12 @@ public class ConstraintManager {
             return null;
         }
 
-        /*
-        Constraints are separated into 3 parts:
-        - Write constraints
-        - Read/Write link constraints
-        - Order constraints
-         */
-
+        // Constraints are separated into 3 parts:
+        // Write constraints
         WriteConstraintsManager.CreateWriteConstraints(ctx, solver, eog);
+        // Read/Write link constraints
         ArrayList<Triplet<String, ReadEventNode, WriteEventNode>> RWLSignatures = RWLConstraintsManager.CreateRWLC_ProgramFromProgram(ctx, solver, eog);
+        // Order constraints
         OrderConstraintsManager.CreateOrderConstraints(ctx, solver, RWLSignatures, eog);
 
         PrintAssertions(solver);

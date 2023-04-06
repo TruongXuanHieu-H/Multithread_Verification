@@ -35,44 +35,6 @@ public class OrderConstraintsManager {
         }
     }
 
-    public static void main(String[] args) {
-        // Create a new context
-        Context ctx = new Context();
-
-        // Create a list of boolean expressions
-        ArrayList<BoolExpr> exprList = new ArrayList<>();
-
-        // Add some expressions to the list
-        exprList.add(ctx.mkBoolConst("p"));
-        exprList.add(ctx.mkBoolConst("q"));
-        exprList.add(ctx.mkBoolConst("r"));
-
-        // Add additional expressions to the list dynamically (e.g. from user input)
-        exprList.add(ctx.mkBoolConst("s"));
-        exprList.add(ctx.mkBoolConst("t"));
-
-        // Create an OR expression using the mkOr method
-        BoolExpr orExpr = ctx.mkOr(exprList.toArray(new BoolExpr[0]));
-
-        // Check if the OR expression is satisfiable
-        Solver solver = ctx.mkSolver();
-        solver.add(orExpr);
-        Status status = solver.check();
-
-        // Print the solution if it exists
-        if (status == Status.SATISFIABLE) {
-            Model model = solver.getModel();
-            for (BoolExpr expr : exprList) {
-                System.out.println(expr + " = " + model.eval(expr, true));
-            }
-        } else {
-            System.out.println("No solution found.");
-        }
-
-        // Dispose the context to release resources
-        ctx.close();
-    }
-
     private static void CreateReadTracker(ReadEventNode readEventNode, HashMap<ReadEventNode, Pair<ArrayList<EventOrderNode>, ArrayList<EventOrderNode>>> readEventTrackerMap) {
         if (readEventTrackerMap.containsKey(readEventNode)) {
             return;

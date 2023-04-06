@@ -20,5 +20,5 @@ void main() {
 	pthread_create(&t2, 0, thr2, 0);
 	pthread_join(t1, 0);
 	pthread_join(t2, 0);
-	//assert (!(m == 2 && n == 3)); 
+	assert (!(m == 2 && n == 3)); 
 }

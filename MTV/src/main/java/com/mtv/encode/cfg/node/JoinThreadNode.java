@@ -3,9 +3,6 @@ package com.mtv.encode.cfg.node;
 import com.mtv.debug.DebugHelper;
 
 public class JoinThreadNode extends CFGNode {
-    public JoinThreadNode() {
-        DebugHelper.print("Create thread node is created");
-    }
     public JoinThreadNode(String threadReference, String retvalExpression) {
         this.threadReference = threadReference;
         this.retvalExpression = retvalExpression;

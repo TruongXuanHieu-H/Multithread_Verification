@@ -131,14 +131,11 @@ public class MultiFunctionCFGBuilder {
         } else if (targetedFuncName.equals("abort")) {
             AbortNode abortNode = new AbortNode();
             return new ControlFlowGraph(abortNode, abortNode);
-        } /*else if (targetedFuncName.equals("assert")) {
-            DebugHelper.print("Assert here");
+        } else if (targetedFuncName.equals("assert")) {
             IASTInitializerClause[] arguments = callExpression.getArguments();
-            for (IASTInitializerClause arg : arguments) {
-                DebugHelper.print(arg.getRawSignature());
-            }
-            return new ControlFlowGraph(null, null);
-        } */else {
+            AssertNode assertNode = new AssertNode((IASTExpression) arguments[0]);
+            return new ControlFlowGraph(assertNode, assertNode);
+        } else {
             IASTFunctionDefinition func = FunctionHelper.getFunction(ast.getListFunction(), targetedFuncName);
 
             if (func == null) {
