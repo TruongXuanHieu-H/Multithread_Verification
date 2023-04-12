@@ -1,6 +1,5 @@
 package com.mtv.app;
 
-import com.microsoft.z3.Context;
 import com.microsoft.z3.Model;
 import com.microsoft.z3.Solver;
 import com.microsoft.z3.Status;
@@ -21,11 +20,11 @@ public class Main {
     static String p3Path = "D:\\KLTN\\Multithread_Verification\\MTV\\Benchmark\\sv_comp\\stateful01-1.c"; // Result: SATISFIABLE
     static String p4Path = "D:\\KLTN\\Multithread_Verification\\MTV\\Benchmark\\sv_comp\\nondet-loop-bound-1.c"; // Result: UNSATISFIABLE with n = 20
     static String p5Path = "D:\\KLTN\\Multithread_Verification\\MTV\\Benchmark\\sv_comp\\triangular-1.c"; // Result: UNSATISFIABLE
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
         Verify(p2Path);
     }
 
-    private static void Verify(String filePath) {
+    private static void Verify(String filePath) throws Exception {
         ASTFactory ast = new ASTFactory(filePath);
         if (ast.getMain() == null) {
             DebugHelper.print("Main function is not detected. Abort.");
@@ -36,21 +35,21 @@ public class Main {
         cfg.printGraph();
         EventOrderGraph eog = EventOrderGraphBuilder.Build(cfg, new HashMap<>(), false);
         eog.printEOG();
-        Solver solver = ConstraintManager.BuildConstraints(eog);
+        Solver solver = ConstraintManager.BuildConstraints(eog, ast);
 
-        Context ctx = ConstraintManager.ctx;
+        /*Context ctx = ConstraintManager.ctx;*/
 
-        if (filePath.equals(p1Path)) {
+        /*if (filePath.equals(p1Path)) {
 
         } else if (filePath.equals(p2Path)){
-            solver.add(/*ctx.mkNot*/(ctx.mkAnd(ctx.mkEq(ctx.mkIntConst("m_1"), ctx.mkInt(2)), ctx.mkEq(ctx.mkIntConst("n_1"), ctx.mkInt(3)))));
+            solver.add(ctx.mkAnd(ctx.mkEq(ctx.mkIntConst("m_1"), ctx.mkInt(2)), ctx.mkEq(ctx.mkIntConst("n_1"), ctx.mkInt(3))));
         } else if (filePath.equals(p3Path)) {
             solver.add(ctx.mkAnd(ctx.mkEq(ctx.mkIntConst("cond1_main_0"), ctx.mkInt(16)), ctx.mkEq(ctx.mkIntConst("cond2_main_0"), ctx.mkInt(5))));
         } else if (filePath.equals(p4Path)) {
             solver.add(ctx.mkGt(ctx.mkIntConst("check_x_0"), ctx.mkIntConst("n_0")));
         } else if (filePath.equals(p5Path)) {
             solver.add(ctx.mkOr(ctx.mkGt(ctx.mkIntConst("i_5"), ctx.mkInt(16)), ctx.mkGt(ctx.mkIntConst("j_10"), ctx.mkInt(16))));
-        }
+        }*/
 
         System.out.println("Start solve");
         if (solver.check() == Status.SATISFIABLE) {

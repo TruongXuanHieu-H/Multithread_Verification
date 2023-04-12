@@ -1,6 +1,5 @@
 package com.mtv.encode.ast;
 
-import com.mtv.encode.cfg.index.VariableManager;
 import org.eclipse.cdt.core.dom.ast.*;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPNodeFactory;
 
@@ -28,22 +27,10 @@ public class FunctionHelper {
     }
     public static String getFunctionType(IASTFunctionDefinition func) {
         return func.getDeclSpecifier().toString();
-
     }
 
     public static String getFunctionName(IASTFunctionDefinition func) {
         return func.getDeclarator().getName().getRawSignature();
-    }
-
-    //Lay Vm cua tat ca cac ham
-    public static VariableManager getVM(ArrayList<IASTFunctionDefinition> funcList) {
-        VariableManager variableManager = new VariableManager();
-        VariableManager subVariableManager = new VariableManager();
-        for (IASTFunctionDefinition func : funcList) {
-            subVariableManager.build(func);
-            variableManager.concat(subVariableManager);
-        }
-        return variableManager;
     }
 
     public static ArrayList<IASTVariable> getParameters(IASTFunctionDefinition func) {

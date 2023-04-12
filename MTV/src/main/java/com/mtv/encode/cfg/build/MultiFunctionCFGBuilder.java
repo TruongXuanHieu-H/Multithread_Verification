@@ -68,12 +68,6 @@ public class MultiFunctionCFGBuilder {
     private CFGNode iterateNode(CFGNode node, IASTFunctionDefinition func) {
         if (node == null) {
 
-        } else if (node instanceof DecisionNode) {
-            ((DecisionNode) node).setThenNode(iterateNode(((DecisionNode) node).getThenNode(), func));
-            ((DecisionNode) node).setElseNode(iterateNode(((DecisionNode) node).getElseNode(), func));
-        } else if (node instanceof BeginNode) {
-            node.setNext(iterateNode(node.getNext(), func));
-            ((BeginNode) node).getEndNode().setNext(iterateNode(((BeginNode) node).getEndNode().getNext(), func));
         } else if (node instanceof FunctionCallNode) {
             ControlFlowGraph functionGraph = createFuncGraph(((FunctionCallNode) node).getFunctionCall(), func);
             if (functionGraph != null) {
@@ -86,8 +80,6 @@ public class MultiFunctionCFGBuilder {
         } else if (node instanceof AbortNode) {
 
         } else if (node instanceof EndFunctionNode) {
-
-        } else if (node instanceof EndConditionNode) {
 
         } else {
             node.setNext(iterateNode(node.getNext(), func));

@@ -1,7 +1,6 @@
 package com.mtv.encode.cfg.node;
 
 import com.mtv.encode.cfg.utils.ExpressionHelper;
-import com.mtv.encode.cfg.index.FormulaCreater;
 import org.eclipse.cdt.core.dom.ast.IASTFunctionCallExpression;
 
 public class FunctionCallNode extends CFGNode {
@@ -28,7 +27,4 @@ public class FunctionCallNode extends CFGNode {
 //		}
     }
 
-    public String getFormula() {
-        return FormulaCreater.createFormula(funcCall);
-    }
 }

@@ -1,8 +1,9 @@
 package com.mtv.encode.constraint;
 
-import com.microsoft.z3.Context;
-import com.microsoft.z3.IntExpr;
-import com.microsoft.z3.Solver;
+import com.microsoft.z3.*;
+import com.mtv.debug.DebugHelper;
+import com.mtv.encode.ast.ASTFactory;
+import com.mtv.encode.cfg.utils.ExpressionHelper;
 import com.mtv.encode.eog.EventOrderGraph;
 import com.mtv.encode.eog.EventOrderNode;
 import com.mtv.encode.eog.WriteEventNode;
@@ -13,12 +14,19 @@ import java.util.ArrayList;
 
 public class WriteConstraintsManager {
     // Create all write constraints in the event order graph using given context then store them in the given solver
-    public static void CreateWriteConstraints(Context ctx, Solver solver, EventOrderGraph eventOrderGraph) {
+
+    // Check point has the variable named "check" and type of "bool" must be defined globally in the program.
+    // Check variable must be assigned to the negative value of input assert or negative input of abort.
+    // Check variable can only be written. Reading check variable can cause several bugs.
+    private static String checkPointName = "check";
+    private static String checkPointType = "bool";
+
+    public static void CreateWriteConstraints(Context ctx, Solver solver, EventOrderGraph eventOrderGraph, ASTFactory astFactory) throws Exception {
         EventOrderNode trackNode = eventOrderGraph.startNode;
-        CreateWriteConstraint(ctx, solver, trackNode);
+        CreateWriteConstraint(ctx, solver, trackNode, astFactory);
         eventOrderGraph.ResetVisited();
     }
-    private static void CreateWriteConstraint(Context ctx, Solver solver, EventOrderNode node) {
+    private static void CreateWriteConstraint(Context ctx, Solver solver, EventOrderNode node, ASTFactory astFactory) throws Exception {
         if (node == null) {
             return;
         }
@@ -27,39 +35,84 @@ public class WriteConstraintsManager {
         node.isVisited = true;
 
         if (node instanceof WriteEventNode writeNode) {
-            IntExpr writeVar = ctx.mkIntConst(writeNode.suffixVarPref);
-            solver.add(ctx.mkEq(CreateCalculation(ctx, writeNode.expression), writeVar));
+            if (writeNode.varPreference.equals(checkPointName)) {
+                solver.add(ctx.mkEq(ctx.mkBoolConst(writeNode.suffixVarPref), ctx.mkBool(true)));
+            }
+            Expr readExpr = CreateCalculation(ctx, writeNode.expression, astFactory);
+            if (readExpr instanceof IntExpr intReadExpr) {
+                IntExpr writeVar = ctx.mkIntConst(writeNode.suffixVarPref);
+                solver.add(ctx.mkEq(intReadExpr, writeVar));
+            } else if (readExpr instanceof BoolExpr boolReadExpr) {
+                BoolExpr writeVar = ctx.mkBoolConst(writeNode.suffixVarPref);
+                solver.add(ctx.mkEq(boolReadExpr, writeVar));
+            } else {
+                throw new IllegalArgumentException("Type of " + readExpr.getClass().toString() + " is not supported");
+            }
         }
 
         ArrayList<EventOrderNode> nextNodes = node.nextNodes;
         for (EventOrderNode nextNode: nextNodes) {
-            CreateWriteConstraint(ctx, solver, nextNode);
+            CreateWriteConstraint(ctx, solver, nextNode, astFactory);
         }
     }
-    private static IntExpr CreateCalculation(Context ctx, IASTExpression expression) {
+    private static Expr CreateCalculation(Context ctx, IASTExpression expression, ASTFactory astFactory) throws Exception {
         if (expression instanceof IASTIdExpression) {
-            return ctx.mkIntConst(((IASTIdExpression)expression).getName().toString());
+            String idType = "";
+            String idName = ((IASTIdExpression) expression).getName().toString();
+            String rawIdName = idName.substring(0, idName.lastIndexOf("_"));
+
+            if (rawIdName.equals(checkPointName)) {
+                throw new IllegalAccessException("Check variable cannot be read.");
+            }
+
+            ArrayList<IASTDeclaration> globalVars = astFactory.getGlobalVarList();
+            for (IASTDeclaration globalVar: globalVars) {
+                IASTDeclarator[] declarators = ((IASTSimpleDeclaration)globalVar).getDeclarators();
+                for (IASTDeclarator declarator: declarators) {
+                    String name = declarator.getName().toString();
+                    if (rawIdName.equals(name)) {
+                        idType = ((IASTSimpleDeclaration) globalVar).getDeclSpecifier().toString();
+                    }
+                }
+            }
+            switch (idType) {
+                case "int":
+                    return ctx.mkIntConst(((IASTIdExpression)expression).getName().toString());
+                case "bool":
+                    return ctx.mkBoolConst(((IASTIdExpression)expression).getName().toString());
+                default:
+                    if (idType.equals("")) idType = "None";
+                    throw new IllegalArgumentException("Type of " + idType + " is not supported");
+            }
         } else if (expression instanceof IASTBinaryExpression binaryExpression) {
             IASTExpression operand1 = binaryExpression.getOperand1();
             IASTExpression operand2 = binaryExpression.getOperand2();
-            IntExpr expr1 = CreateCalculation(ctx, operand1);
-            IntExpr expr2 = CreateCalculation(ctx, operand2);
-            if (binaryExpression.getOperator() == 1) {
-                return (IntExpr) ctx.mkMul(expr1, expr2);
-            } else if (binaryExpression.getOperator() == 2) {
-                return (IntExpr) ctx.mkDiv(expr1, expr2);
-            } else if (binaryExpression.getOperator() == 4) {
-                return (IntExpr) ctx.mkAdd(expr1, expr2);
-            } else if (binaryExpression.getOperator() == 5) {
-                return (IntExpr) ctx.mkSub(expr1, expr2);
-            } else if (binaryExpression.getOperator() == 3) {
-                return ctx.mkMod(expr1, expr2);
-            } else {
-                System.out.println(binaryExpression.getOperator());
-                return null;
+            Expr expr1 = CreateCalculation(ctx, operand1, astFactory);
+            Expr expr2 = CreateCalculation(ctx, operand2, astFactory);
+            switch (binaryExpression.getOperator()) {
+                case 1:
+                    return ctx.mkMul(expr1, expr2);
+                case 2:
+                    return ctx.mkDiv(expr1, expr2);
+                case 3:
+                    return ctx.mkMod(expr1, expr2);
+                case 4:
+                    return ctx.mkAdd(expr1, expr2);
+                case 5:
+                    return ctx.mkSub(expr1, expr2);
+                case 15:
+                    return ctx.mkAnd(expr1, expr2);
+                case 16:
+                    return ctx.mkOr(expr1, expr2);
+                case 28:
+                    return ctx.mkEq(expr1, expr2);
+                case 29:
+                    return ctx.mkDistinct(expr1, expr2);
+                default:
+                    throw new Exception("Operator " + binaryExpression.getOperator() + " not supported.");
             }
         } else if (expression instanceof IASTUnaryExpression unaryExpression) {
-            return CreateCalculation(ctx, unaryExpression.getOperand());
+            return CreateCalculation(ctx, unaryExpression.getOperand(), astFactory);
         } else if (expression instanceof IASTLiteralExpression literalExpression) {
             return ctx.mkInt(literalExpression.toString());
         } else {

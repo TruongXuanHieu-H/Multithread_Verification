@@ -145,6 +145,9 @@ public class EventOrderGraphBuilder {
                     // This may never happen due to VarAssignedNode is created on a IASTBinaryExpression
                     // DebugHelper.print("Statement " + ExpressionHelper.toString(statement) + " is not a IASTBinaryExpression");
                 }
+            } else if (start instanceof AssertNode) {
+                DebugHelper.print("Assert node");
+                start.printNode();
             } else {
                 // Other nodes are skipped because we only care about read-write links
             }

@@ -15,7 +15,6 @@ public class ASTNodeFactory {
         newDeclaration.addDeclarator(newDeclarator);
         newDeclStatement = factory.newDeclarationStatement(newDeclaration);
         return newDeclStatement;
-
     }
 
     public static IASTName createName(String newName) {

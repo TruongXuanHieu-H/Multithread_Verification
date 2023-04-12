@@ -66,7 +66,6 @@ public class ExpressionModifier {
         IASTExpression expression = (IASTExpression) changeVariableName(node.getExpression().copy(), func);
         CPPNodeFactory factory = (CPPNodeFactory) func.getTranslationUnit().getASTNodeFactory();
         IASTStatement newStatement = factory.newExpressionStatement(expression);
-        //System.err.println("Test: " + ExpressionHelper.toString(newStatement));
         return newStatement;
     }
 

@@ -14,21 +14,7 @@ import java.util.List;
 public class ASTFactory {
 
     private static IASTTranslationUnit translationUnit;
-    private String fileLocation = "./test.c";
-
-
-    public ASTFactory() {
-        FileContent fileContent = FileContent.createForExternalFileLocation(fileLocation);
-        IncludeFileContentProvider includeFile = IncludeFileContentProvider.getEmptyFilesProvider();
-        IParserLogService log = new DefaultLogService();
-        String[] includePaths = new String[0];
-        IScannerInfo info = new ScannerInfo(new HashMap<String, String>(), includePaths);
-        try {
-            translationUnit = GPPLanguage.getDefault().getASTTranslationUnit(fileContent, info, includeFile, null, 0, log);
-        } catch (CoreException e) {
-            e.printStackTrace();
-        }
-    }
+    private String fileLocation = "";
 
     public ASTFactory(IASTTranslationUnit ast) {
         translationUnit = ast;
@@ -85,6 +71,7 @@ public class ASTFactory {
         }
         return funcList;
     }
+
     public ArrayList<IASTFunctionDefinition> getListFunction() {
         if (translationUnit == null) return null;
         ArrayList<IASTFunctionDefinition> funcList = new ArrayList<>();

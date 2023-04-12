@@ -2,9 +2,6 @@ package com.mtv.encode.cfg.node;
 
 import com.mtv.debug.DebugHelper;
 import com.mtv.encode.cfg.utils.ExpressionHelper;
-import com.mtv.encode.cfg.utils.Index;
-import com.mtv.encode.cfg.index.FormulaCreater;
-import com.mtv.encode.cfg.index.VariableManager;
 import com.mtv.encode.cfg.utils.ExpressionModifier;
 import org.eclipse.cdt.core.dom.ast.IASTFunctionCallExpression;
 import org.eclipse.cdt.core.dom.ast.IASTFunctionDefinition;
@@ -14,10 +11,6 @@ import org.eclipse.cdt.core.dom.ast.IASTStatement;
 public class PlainNode extends CFGNode {
     private IASTStatement statement;
     private IASTFunctionDefinition func;
-
-    public PlainNode() {
-        super();
-    }
 
     public PlainNode(IASTStatement statement) {
         this.statement = statement;
@@ -32,26 +25,6 @@ public class PlainNode extends CFGNode {
         return (IASTStatement) ExpressionModifier.changeVariableName(statement, func);
     }
 
-    public IASTStatement getStatement() {
-        return statement;
-    }
-
-    public void setStatement(IASTStatement statement) {
-        this.statement = statement;
-    }
-
-    public void index(VariableManager vm) {
-        statement = (IASTStatement) Index.index(statement, vm);
-    }
-
-    public String getFormula() {
-        return FormulaCreater.createFormula(statement);
-    }
-
-    public String getInfixFormula() {
-        return FormulaCreater.createInfixFormula(statement);
-    }
-
     public String toString() {
         return ExpressionHelper.toString(statement);
     }
@@ -62,10 +35,6 @@ public class PlainNode extends CFGNode {
             DebugHelper.print("PlainNode: " + ExpressionHelper.toString(statement));
         } else System.out.println(this);
 
-    }
-
-    public boolean isFunctionCall() {
-        return hasCallExpression(statement);
     }
 
     private boolean hasCallExpression(IASTNode statement) {

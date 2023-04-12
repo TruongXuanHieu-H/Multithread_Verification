@@ -10,7 +10,7 @@ public class DebugHelper {
 
     public static void print(String content) {
         StackTraceElement stack = new Throwable().getStackTrace()[1];
-        System.out.println(content + "\u001B[37m"    //low-visibality
+        System.out.println(content + "\u001B[37m"    //low-visibility
                 + "\t :: ["+stack+"]"  //code path
                 + "\u001B[0m ");
     }

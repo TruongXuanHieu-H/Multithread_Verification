@@ -49,34 +49,9 @@ public class ControlFlowGraph {
         }
         if (start == null) {
             return;
-        } else if (start instanceof DecisionNode) {
-            start.printNode();
-            printSpace(level + 4);
-            DebugHelper.print("Then Clause: ");
-            if (((DecisionNode) start).getThenNode() != null) {
-                print(((DecisionNode) start).getThenNode(), level + 4);
-            }
-            DebugHelper.print("Else Clause: ");
-            if (((DecisionNode) start).getElseNode() != null)
-                print(((DecisionNode) start).getElseNode(), level + 4);
-        } else if (start instanceof GotoNode) {
-            start.printNode();
-            printSpace(level);
-            start.getNext().printNode();
-        } else if (start instanceof IterationNode) {
-            start.printNode();
-            if (start.getNext() != null) print(start.getNext(), level);
-            else return;
         } else if (start instanceof EmptyNode) {
             start.printNode();
             print(start.getNext(), level);
-        } else if (start instanceof EndConditionNode) {
-            level -= 7;
-        } else if (start instanceof BeginNode) {
-            start.printNode();
-            print(start.getNext(), level);
-            ((BeginNode) start).getEndNode().printNode();
-            print(((BeginNode) start).getEndNode().getNext(), level);
         } else if (start instanceof EndNode) {
             start.printNode();
             print(start.getNext(), level);
@@ -95,16 +70,14 @@ public class ControlFlowGraph {
         }
     }
 
-
     public void concat(ControlFlowGraph other) {
         if (start == null || exit == null) {
             start = other.start;
-            exit = other.exit;
         } else {
             exit.setNext(other.start);
-            exit = other.exit;
 
         }
+        exit = other.exit;
     }
 
     public ControlFlowGraph build(IASTFunctionDefinition def) {

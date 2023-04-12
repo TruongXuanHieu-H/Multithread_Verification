@@ -5,9 +5,6 @@ import org.eclipse.cdt.core.dom.ast.IASTNode;
 public class UndefinedNode extends CFGNode {
     private IASTNode node;
 
-    public UndefinedNode() {
-    }
-
     public UndefinedNode(IASTNode data) {
         node = data;
     }

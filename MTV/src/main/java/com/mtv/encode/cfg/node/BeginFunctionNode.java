@@ -9,9 +9,6 @@ public class BeginFunctionNode extends CFGNode {
     public BeginFunctionNode(IASTFunctionDefinition function) {
         funcDefinition = function;
     }
-    public void setFunction(IASTFunctionDefinition function) {
-        funcDefinition = function;
-    }
     public String getName() {
         return FunctionHelper.getFunctionName(funcDefinition);
     }
@@ -21,11 +18,4 @@ public class BeginFunctionNode extends CFGNode {
         System.out.println(getName() + " {");
     }
 
-    public IASTFunctionDefinition getFuncDefinition() {
-        return funcDefinition;
-    }
-
-    public void setFuncDefinition(IASTFunctionDefinition funcDefinition) {
-        this.funcDefinition = funcDefinition;
-    }
 }
