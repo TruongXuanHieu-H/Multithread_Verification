@@ -13,7 +13,7 @@ int x;
 int n = 20;
 bool check;
 void* thr1(void* arg) {
-    check = (x >= n);
+    check = (x > n);
 }
 
 void* thr2(void* arg) {
@@ -52,6 +52,7 @@ int main(int argc, char* argv[]) {
 	pthread_create(&t2, 0, thr2, 0);
 	pthread_create(&t2, 0, thr2, 0);
 	pthread_create(&t2, 0, thr2, 0);     
+	
 	
     return 0;
 }

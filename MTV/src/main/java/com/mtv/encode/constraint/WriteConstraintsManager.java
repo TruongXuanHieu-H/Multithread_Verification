@@ -18,15 +18,15 @@ public class WriteConstraintsManager {
     // Check point has the variable named "check" and type of "bool" must be defined globally in the program.
     // Check variable must be assigned to the negative value of input assert or negative input of abort.
     // Check variable can only be written. Reading check variable can cause several bugs.
-    private static String checkPointName = "check";
-    private static String checkPointType = "bool";
+    private final static String checkPointName = "check";
+    private final static String checkPointType = "bool";
 
-    public static void CreateWriteConstraints(Context ctx, Solver solver, EventOrderGraph eventOrderGraph, ASTFactory astFactory) throws Exception {
+    public static void CreateWriteConstraints(Context ctx, Solver solver, EventOrderGraph eventOrderGraph, ArrayList<IASTDeclaration> globalVars) throws Exception {
         EventOrderNode trackNode = eventOrderGraph.startNode;
-        CreateWriteConstraint(ctx, solver, trackNode, astFactory);
+        CreateWriteConstraint(ctx, solver, trackNode, globalVars);
         eventOrderGraph.ResetVisited();
     }
-    private static void CreateWriteConstraint(Context ctx, Solver solver, EventOrderNode node, ASTFactory astFactory) throws Exception {
+    private static void CreateWriteConstraint(Context ctx, Solver solver, EventOrderNode node, ArrayList<IASTDeclaration> globalVars) throws Exception {
         if (node == null) {
             return;
         }
@@ -38,7 +38,7 @@ public class WriteConstraintsManager {
             if (writeNode.varPreference.equals(checkPointName)) {
                 solver.add(ctx.mkEq(ctx.mkBoolConst(writeNode.suffixVarPref), ctx.mkBool(true)));
             }
-            Expr readExpr = CreateCalculation(ctx, writeNode.expression, astFactory);
+            Expr readExpr = CreateCalculation(ctx, writeNode.expression, globalVars);
             if (readExpr instanceof IntExpr intReadExpr) {
                 IntExpr writeVar = ctx.mkIntConst(writeNode.suffixVarPref);
                 solver.add(ctx.mkEq(intReadExpr, writeVar));
@@ -52,10 +52,10 @@ public class WriteConstraintsManager {
 
         ArrayList<EventOrderNode> nextNodes = node.nextNodes;
         for (EventOrderNode nextNode: nextNodes) {
-            CreateWriteConstraint(ctx, solver, nextNode, astFactory);
+            CreateWriteConstraint(ctx, solver, nextNode, globalVars);
         }
     }
-    private static Expr CreateCalculation(Context ctx, IASTExpression expression, ASTFactory astFactory) throws Exception {
+    private static Expr CreateCalculation(Context ctx, IASTExpression expression, ArrayList<IASTDeclaration> globalVars) throws Exception {
         if (expression instanceof IASTIdExpression) {
             String idType = "";
             String idName = ((IASTIdExpression) expression).getName().toString();
@@ -65,7 +65,6 @@ public class WriteConstraintsManager {
                 throw new IllegalAccessException("Check variable cannot be read.");
             }
 
-            ArrayList<IASTDeclaration> globalVars = astFactory.getGlobalVarList();
             for (IASTDeclaration globalVar: globalVars) {
                 IASTDeclarator[] declarators = ((IASTSimpleDeclaration)globalVar).getDeclarators();
                 for (IASTDeclarator declarator: declarators) {
@@ -81,14 +80,19 @@ public class WriteConstraintsManager {
                 case "bool":
                     return ctx.mkBoolConst(((IASTIdExpression)expression).getName().toString());
                 default:
-                    if (idType.equals("")) idType = "None";
-                    throw new IllegalArgumentException("Type of " + idType + " is not supported");
+                    if (idType.equals("")) {
+                        // If idType is not set, that means this variable is not global
+                        // Assume all local variables are int
+                        return ctx.mkIntConst(((IASTIdExpression)expression).getName().toString());
+                    } else {
+                        throw new IllegalArgumentException("Type of " + idType + " is not supported");
+                    }
             }
         } else if (expression instanceof IASTBinaryExpression binaryExpression) {
             IASTExpression operand1 = binaryExpression.getOperand1();
             IASTExpression operand2 = binaryExpression.getOperand2();
-            Expr expr1 = CreateCalculation(ctx, operand1, astFactory);
-            Expr expr2 = CreateCalculation(ctx, operand2, astFactory);
+            Expr expr1 = CreateCalculation(ctx, operand1, globalVars);
+            Expr expr2 = CreateCalculation(ctx, operand2, globalVars);
             switch (binaryExpression.getOperator()) {
                 case 1:
                     return ctx.mkMul(expr1, expr2);
@@ -100,6 +104,14 @@ public class WriteConstraintsManager {
                     return ctx.mkAdd(expr1, expr2);
                 case 5:
                     return ctx.mkSub(expr1, expr2);
+                case 8:
+                    return ctx.mkLt(expr1, expr2);
+                case 9:
+                    return ctx.mkGt(expr1, expr2);
+                case 10:
+                    return ctx.mkLe(expr1, expr2);
+                case 11:
+                    return ctx.mkGe(expr1, expr2);
                 case 15:
                     return ctx.mkAnd(expr1, expr2);
                 case 16:
@@ -107,12 +119,12 @@ public class WriteConstraintsManager {
                 case 28:
                     return ctx.mkEq(expr1, expr2);
                 case 29:
-                    return ctx.mkDistinct(expr1, expr2);
+                    return ctx.mkNot(ctx.mkEq(expr1, expr2));
                 default:
                     throw new Exception("Operator " + binaryExpression.getOperator() + " not supported.");
             }
         } else if (expression instanceof IASTUnaryExpression unaryExpression) {
-            return CreateCalculation(ctx, unaryExpression.getOperand(), astFactory);
+            return CreateCalculation(ctx, unaryExpression.getOperand(), globalVars);
         } else if (expression instanceof IASTLiteralExpression literalExpression) {
             return ctx.mkInt(literalExpression.toString());
         } else {

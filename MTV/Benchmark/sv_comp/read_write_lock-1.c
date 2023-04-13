@@ -38,8 +38,10 @@ void *reader(void *arg) { //reader
   __VERIFIER_atomic_take_read_lock();
   l = x;
   y = l;
-  //assert(y == x);
-  check = (y != x);
+  int ly = y;
+  int lx = x;
+  //assert(ly == lx);
+  check = (ly != lx);
   __VERIFIER_atomic_release_read_lock();
   return 0;
 }

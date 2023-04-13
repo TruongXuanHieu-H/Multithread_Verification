@@ -8,9 +8,14 @@
 
 #include <pthread.h>
 int i = 3, j = 6;
-int LIMIT = 16;
-int check;
+int LIMIT = 26;
+bool check;
 void *t1(void *arg) {
+	i = j + 1;
+	i = j + 1;
+	i = j + 1;
+	i = j + 1;
+	i = j + 1;
 	i = j + 1;
 	i = j + 1;
 	i = j + 1;
@@ -18,6 +23,11 @@ void *t1(void *arg) {
 	i = j + 1;
 }
 void *t2(void *arg) {
+	j = i + 1;
+	j = i + 1;
+	j = i + 1;
+	j = i + 1;
+	j = i + 1;
 	j = i + 1;
 	j = i + 1;
 	j = i + 1;

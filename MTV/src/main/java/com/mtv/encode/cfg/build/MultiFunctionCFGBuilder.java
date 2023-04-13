@@ -19,7 +19,6 @@ public class MultiFunctionCFGBuilder {
 
     public MultiFunctionCFGBuilder(ASTFactory ast) {
         this.ast = ast;
-
     }
 
 

@@ -1,10 +1,12 @@
 package com.mtv.encode.constraint;
 
 import com.microsoft.z3.*;
+import com.mtv.debug.DebugHelper;
 import com.mtv.encode.eog.EventOrderGraph;
 import com.mtv.encode.eog.EventOrderNode;
 import com.mtv.encode.eog.ReadEventNode;
 import com.mtv.encode.eog.WriteEventNode;
+import org.eclipse.cdt.core.dom.ast.IASTDeclaration;
 import org.javatuples.Pair;
 import org.javatuples.Triplet;
 
@@ -83,7 +85,6 @@ public class OrderConstraintsManager {
                                                  Map.Entry<ReadEventNode, Pair<ArrayList<EventOrderNode>, ArrayList<EventOrderNode>>> readEntry,
                                                  Map.Entry<WriteEventNode, Pair<ArrayList<EventOrderNode>, ArrayList<EventOrderNode>>> writeEntry) {
         String positiveSignature = RWLConstraintsManager.CreateRWLCSignature(readEntry.getKey(), writeEntry.getKey());
-
         ArrayList<String> negativeSignatures = CreateNegativeSignatures(readEntry, writeEntry);
         ArrayList<BoolExpr> availableNegativeSignatures = new ArrayList<>();
         for (String negativeSignature: negativeSignatures) {
@@ -129,7 +130,8 @@ public class OrderConstraintsManager {
                     }
                 } else if (previousRead instanceof WriteEventNode pR_Write) {
                     if (afterWrite instanceof ReadEventNode aW_Read) {
-                        if (pR_Write.varPreference.equals(writeEntry.getKey().varPreference)
+                        if (pR_Write != writeEntry.getKey()
+                                && pR_Write.varPreference.equals(writeEntry.getKey().varPreference)
                                 && pR_Write.varPreference.equals(aW_Read.varPreference)) {
                             negativeSignatures.add(RWLConstraintsManager.CreateRWLCSignature(aW_Read, pR_Write));
                         }
@@ -227,7 +229,7 @@ public class OrderConstraintsManager {
         }
 
         /*
-        // TODO:
+        // TODO: Additional feature that can be used in future
         // All previous nodes of write node
         ArrayList<EventOrderNode> previousWNNodes = FindAllPreviousNodes(writeEntry.getKey());
         // All previous write nodes of write node which have the same var with read node
@@ -241,7 +243,7 @@ public class OrderConstraintsManager {
             }
         }
 
-        // TODO:
+        // TODO: Additional feature that can be used in future
         // All following nodes of read node
         ArrayList<EventOrderNode> followingRNNodes = FindAllFollowingNodes((readEntry.getKey()));
         // All following write nodes of read node
@@ -270,6 +272,4 @@ public class OrderConstraintsManager {
         }
         return result;
     }
-
-
 }
