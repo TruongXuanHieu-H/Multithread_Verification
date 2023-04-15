@@ -32,13 +32,5 @@ public class ConstraintManager {
         // Order constraints
         OrderConstraintsManager.CreateOrderConstraints(ctx, solver, RWLSignatures, eog);
 
-        //PrintAssertions();
     }
-
-    public void PrintAssertions() {
-        for (BoolExpr boolExpr: solver.getAssertions()) {
-            System.out.println(boolExpr.toString());
-        }
-    }
-
 }

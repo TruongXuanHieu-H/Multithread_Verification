@@ -23,7 +23,7 @@ public class ExportToExcell {
     private static int labelRow = 4;
 
 
-    public static void Export(ArrayList<ExcellReporter> reporters) throws IOException, BiffException, WriteException {
+    public static void Export(ArrayList<ExcellReporter> reporters, Integer timeout) throws IOException, BiffException, WriteException {
         if (file == null) {
             file = new File(filePath);
         }
@@ -33,7 +33,7 @@ public class ExportToExcell {
         WritableWorkbook writableWorkbook = Workbook.createWorkbook(file, workbook);
         WritableSheet writableSheet = writableWorkbook.getSheet(sheetName);
         for (ExcellReporter reporter : reporters ) {
-            WriteToRow(currentReportCases + labelRow + 1, currentReportCases + 1, reporter, writableSheet);
+            WriteToRow(currentReportCases + labelRow + 1, currentReportCases + 1, reporter, writableSheet, timeout);
             currentReportCases += 1;
         }
 
@@ -93,14 +93,20 @@ public class ExportToExcell {
         Label consGenTime = new Label(6, labelRow, "Constraints generation time (milliseconds)");
         sheet.addCell(consGenTime);
 
-        Label solveTime = new Label(7, labelRow, "Solve time (milliseconds)");
+        Label timeout = new Label(7, labelRow, "Timeout (milliseconds)");
+        sheet.addCell(timeout);
+
+        Label solveTime = new Label(8, labelRow, "Solve time (milliseconds)");
         sheet.addCell(solveTime);
+
+        Label finalResult = new Label(9, labelRow, "Final result");
+        sheet.addCell(finalResult);
 
         writableWorkbook.write();
         writableWorkbook.close();
     }
 
-    private static void WriteToRow(int row, int index, ExcellReporter reporter, WritableSheet sheet) throws WriteException {
+    private static void WriteToRow(int row, int index, ExcellReporter reporter, WritableSheet sheet, Integer timeout) throws WriteException {
         Label indexLabel = new Label(0, row, index + "");
         sheet.addCell(indexLabel);
 
@@ -135,7 +141,35 @@ public class ExportToExcell {
         Label consGenTime = new Label(6, row, reporter.consGenTime + "");
         sheet.addCell(consGenTime);
 
-        Label solveTime = new Label(7, row, reporter.solveTime + "");
+        Label timeoutLabel = new Label(7, row, timeout + "");
+        sheet.addCell(timeoutLabel);
+
+        Label solveTime = new Label(8, row, reporter.solveTime + "");
+        WritableCellFormat solveTimeFormat = new WritableCellFormat();
+        if (reporter.solveTime >= timeout) {
+            solveTimeFormat.setBackground(Colour.RED);
+        } else {
+            solveTimeFormat.setBackground(Colour.BRIGHT_GREEN);
+        }
+        solveTime.setCellFormat(solveTimeFormat);
         sheet.addCell(solveTime);
+
+        String finalResultStr = (reporter.solveTime >= timeout)?
+                "NOT SURE" : (reporter.verificationResult.equals("SATISFIABLE"))?
+                    "NOT SAFE" : "SAFE";
+        Label finalResult = new Label(9, row, finalResultStr);
+        WritableCellFormat finalResultFormat = new WritableCellFormat();
+        if (finalResultStr.equals("NOT SURE")) {
+            finalResultFormat.setBackground(Colour.YELLOW);
+        } else if (finalResultStr.equals("NOT SAFE")) {
+            finalResultFormat.setBackground(Colour.RED);
+        } else if (finalResultStr.equals("SAFE")){
+            finalResultFormat.setBackground(Colour.BRIGHT_GREEN);
+        } else {
+
+        }
+        finalResult.setCellFormat(finalResultFormat);
+        sheet.addCell(finalResult);
+
     }
 }

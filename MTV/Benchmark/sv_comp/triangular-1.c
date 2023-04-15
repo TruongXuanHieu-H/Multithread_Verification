@@ -9,7 +9,7 @@
 #include <pthread.h>
 int i = 3, j = 6;
 int LIMIT = 16;
-int check;
+bool check;
 void *t1(void *arg) {
 	i = j + 1;
 	i = j + 1;
