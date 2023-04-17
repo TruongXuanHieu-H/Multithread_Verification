@@ -32,11 +32,16 @@ public class Main {
     static String p11Path = "D:\\KLTN\\Multithread_Verification\\MTV\\Benchmark\\sv_comp\\triangular-longer-2.c";
     static String p12Path = "D:\\KLTN\\Multithread_Verification\\MTV\\Benchmark\\sv_comp\\triangular-longest-1.c";
     static String p13Path = "D:\\KLTN\\Multithread_Verification\\MTV\\Benchmark\\sv_comp\\triangular-longest-2.c";
+    static String p14Path = "D:\\KLTN\\Multithread_Verification\\MTV\\Benchmark\\sv_comp\\peterson-b.c";
+    static String p15Path = "D:\\KLTN\\Multithread_Verification\\MTV\\Benchmark\\sv_comp\\reorder_c11_bad_10.c";
+    static String p16Path = "D:\\KLTN\\Multithread_Verification\\MTV\\Benchmark\\sv_comp\\reorder_c11_bad_30.c";
+    static String p17Path = "D:\\KLTN\\Multithread_Verification\\MTV\\Benchmark\\sv_comp\\reorder_c11_good_10.c";
+    static String p18Path = "D:\\KLTN\\Multithread_Verification\\MTV\\Benchmark\\sv_comp\\reorder_c11_good_30.c";
 
-
-    static ArrayList<String> paths = new ArrayList<>(Arrays.asList(
-            p1Path, p2Path, p3Path, p4Path, p5Path, p6Path, p7Path, p8Path, p9Path, p10Path, p11Path, p12Path, p13Path
-
+    static ArrayList<String> paths = new ArrayList<>(Arrays.asList(/*p1Path, p2Path, p3Path, p4Path, p5Path,
+            p6Path, p7Path, p8Path, p9Path, p10Path, p11Path, p12Path, p13Path, p14Path, p15Path, p16Path,
+            p17Path, p18Path*/
+            p13Path
     ));
 
 
@@ -66,6 +71,7 @@ public class Main {
 
     public static ExcellReporter VerifyFile(String filePath, Context ctx, Solver solver) throws Exception {
         long buildConstraintsTime = BuildConstraints(filePath, ctx, solver);
+        int numberConstraints = solver.getAssertions().length;
 
         long statSolveConstraints = System.currentTimeMillis();
         String verificationResult = "UNKNOWN";
@@ -81,7 +87,7 @@ public class Main {
         long endSolveConstraints = System.currentTimeMillis();
 
         ExcellReporter reporter = new ExcellReporter(filePath.substring(filePath.lastIndexOf("\\") + 1), LocalDateTime.now(), new ArrayList<String>(Files.readAllLines(Paths.get(filePath))),
-                verificationResult, solver.getAssertions().length, buildConstraintsTime, endSolveConstraints - statSolveConstraints);
+                verificationResult, numberConstraints, buildConstraintsTime, endSolveConstraints - statSolveConstraints);
 
         return reporter;
     }
@@ -105,12 +111,12 @@ public class Main {
     public static ControlFlowGraph BuildCFG(ASTFactory ast) {
         IASTFunctionDefinition mainFunc = ast.getMain();
         ControlFlowGraph cfg = new ControlFlowGraph(mainFunc, ast, true);
-        // cfg.printGraph();
+        //cfg.printGraph();
         return cfg;
     }
     public static EventOrderGraph BuildEOG(ControlFlowGraph cfg) {
         EventOrderGraph eog = EventOrderGraphBuilder.Build(cfg, new HashMap<>(), false);
-        // eog.printEOG();
+        //eog.printEOG();
         return eog;
     }
     public static long BuildConstraints(ASTFactory ast, EventOrderGraph eog, Context ctx, Solver solver) throws Exception {
@@ -118,6 +124,7 @@ public class Main {
         ConstraintManager constraintManager = new ConstraintManager(ctx, solver);
         constraintManager.BuildConstraints(eog, ast);
         long endBuildConstraints = System.currentTimeMillis();
+
         return endBuildConstraints - startBuildConstraints;
     }
     public static ControlFlowGraph BuildCFG(String filePath) throws Exception {

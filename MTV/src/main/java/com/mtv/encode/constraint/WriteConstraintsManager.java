@@ -9,6 +9,7 @@ import com.mtv.encode.eog.EventOrderNode;
 import com.mtv.encode.eog.WriteEventNode;
 import org.eclipse.cdt.core.dom.ast.*;
 
+import javax.management.InvalidAttributeValueException;
 import java.util.ArrayList;
 
 
@@ -126,10 +127,22 @@ public class WriteConstraintsManager {
         } else if (expression instanceof IASTUnaryExpression unaryExpression) {
             return CreateCalculation(ctx, unaryExpression.getOperand(), globalVars);
         } else if (expression instanceof IASTLiteralExpression literalExpression) {
-            return ctx.mkInt(literalExpression.toString());
+            return LiteralExprToSMTExpr(literalExpression, ctx);
         } else {
             System.out.println(expression.getClass().toString());
             return null;
+        }
+    }
+
+    private static Expr LiteralExprToSMTExpr(IASTLiteralExpression literalExpression, Context ctx) throws Exception {
+        if (literalExpression.toString().matches("-?\\d+")) {
+            return ctx.mkInt(literalExpression.toString());
+        } else if (literalExpression.toString().matches("(true)|(false)")){
+            if (literalExpression.toString().equals("true"))
+                return ctx.mkBool(true);
+            else return ctx.mkBool(false);
+        } else {
+            throw new InvalidAttributeValueException("Literal value " + literalExpression.toString() + " is not supported");
         }
     }
 }

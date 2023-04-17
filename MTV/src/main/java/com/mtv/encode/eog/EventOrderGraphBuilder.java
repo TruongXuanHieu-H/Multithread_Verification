@@ -283,6 +283,8 @@ public class EventOrderGraphBuilder {
                 idExpressions.addAll(GetIdExpressionFromBinaryExpression((IASTBinaryExpression)expr));
             } else if (expr instanceof IASTUnaryExpression) {
                 idExpressions.addAll(GetIDExpressionFromUnaryExpression((IASTUnaryExpression) expr));
+            } else if (expr instanceof IASTLiteralExpression) {
+
             } else {
                 DebugHelper.print(expr.getClass().toString());
                 // TODO: Additional cases

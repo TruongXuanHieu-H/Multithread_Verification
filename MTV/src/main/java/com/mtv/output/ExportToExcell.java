@@ -14,7 +14,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 public class ExportToExcell {
-
+    private static boolean isDraft = true;
+    private static String draftPath = "draft_report.xls";
     private static String filePath = "MTV_Report.xls";
     private static String sheetName = "Report sheet";
 
@@ -22,10 +23,12 @@ public class ExportToExcell {
 
     private static int labelRow = 4;
 
-
     public static void Export(ArrayList<ExcellReporter> reporters, Integer timeout) throws IOException, BiffException, WriteException {
         if (file == null) {
-            file = new File(filePath);
+            if (isDraft)
+                file = new File(draftPath);
+            else
+                file = new File(filePath);
         }
         int currentReportCases = GetCurrentReportCases(file);
 

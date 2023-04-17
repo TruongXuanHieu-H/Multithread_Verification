@@ -31,6 +31,5 @@ public class ConstraintManager {
         ArrayList<Triplet<String, ReadEventNode, WriteEventNode>> RWLSignatures = RWLConstraintsManager.CreateRWLC_ProgramFromProgram(ctx, solver, eog, globalVars);
         // Order constraints
         OrderConstraintsManager.CreateOrderConstraints(ctx, solver, RWLSignatures, eog);
-
     }
 }
