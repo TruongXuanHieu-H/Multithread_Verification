@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/MTV/MTV.iml" filepath="$PROJECT_DIR$/MTV/MTV.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/Multithread_Verification.iml" filepath="$PROJECT_DIR$/.idea/Multithread_Verification.iml" />
     </modules>
   </component>
 </project>
