@@ -3,40 +3,28 @@
 */
 
 #include <pthread.h>
-
 int flag1 = 0, flag2 = 0; // boolean flags
 int turn; // integer variable to hold the ID of the thread whose turn is it
 int x; // boolean variable to test mutual exclusion
 bool check; 
-
 void *thr1(void *_) {
   flag1 = 1;
   turn = 1;
-  //while (flag2==1 && turn==1) {};
   check = (flag2 != 1 || turn != 1);
-  // begin: critical section
   x = 0;
-  //assert(x<=0);
   check = (x > 0);
-  // end: critical section
   flag1 = 0;
   return 0;
 }
-
 void *thr2(void *_) {
   flag2 = 1;
   turn = 0;
-  //while (flag1==1 && turn==0) {};
   check = (flag1 != 1 || turn != 0);
-  // begin: critical section
   x = 1;
-  //assert(x>=1);
   check = (x < 1);
-  // end: critical section
   flag2 = 0;
   return 0;
 }
-  
 int main() {
   pthread_t t1, t2;
   pthread_create(&t1, 0, thr1, 0);

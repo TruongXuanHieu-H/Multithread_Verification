@@ -7,43 +7,34 @@
 */
 
 #include <pthread.h>
-
 int w=0, r=0, x, y;
 bool check; 
 void __VERIFIER_atomic_take_write_lock() {
-  //assume_abort_if_not(w==0 && r==0);
   check = (w != 0 || r != 0)
   w = 1;
 } 
-
 void __VERIFIER_atomic_take_read_lock() {
-  //assume_abort_if_not(w==0);
   check = (w != 0)
   r = r+1;
 }
-
 void __VERIFIER_atomic_release_read_lock() {
   r = r-1;
 }
-
 void *writer(void *arg) { //writer
   __VERIFIER_atomic_take_write_lock();  
   x = 3;
   w = 0;
   return 0;
 }
-
 void *reader(void *arg) { //reader
   int l;
   __VERIFIER_atomic_take_read_lock();
   l = x;
   y = l;
-  //assert(y == x);
   check = (y != x);
   __VERIFIER_atomic_release_read_lock();
   return 0;
 }
-
 int main() {
   pthread_t t1, t2, t3, t4;
   pthread_create(&t1, 0, writer, 0);

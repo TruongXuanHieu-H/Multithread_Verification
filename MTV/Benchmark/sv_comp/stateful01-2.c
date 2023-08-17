@@ -16,14 +16,12 @@ void * thread1(void * arg)
   	data2 += 1;
   	return 0;
 }
-
 void * thread2(void * arg)
 {  
   	data1+=5;
   	data2-=6;
   	return 0;
 }
-
 int main()
 {
   	pthread_t  t1, t2;
@@ -33,11 +31,6 @@ int main()
   	pthread_create(&t2, 0, thread2, 0);
   	pthread_join(t1, 0);
   	pthread_join(t2, 0);
-//  	if (data1!=16 && data2!=5)
-//  	{
-//    	ERROR: {reach_error();abort();}
-//      	;    
-//  	}
 	check = (data1!=16 && data2!=5);
   	return 0;
 }
